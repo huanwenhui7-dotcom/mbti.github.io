@@ -1,0 +1,1566 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>MBTI 16型人格趣味测评中心</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='30' fill='%23f7c9b6'/%3E%3Ccircle cx='23' cy='28' r='4' fill='%234a3f53'/%3E%3Ccircle cx='41' cy='28' r='4' fill='%234a3f53'/%3E%3Cellipse cx='18' cy='36' rx='4' ry='2.4' fill='%23f2938f'/%3E%3Cellipse cx='46' cy='36' rx='4' ry='2.4' fill='%23f2938f'/%3E%3Cpath d='M24 38q8 7 16 0' stroke='%234a3f53' stroke-width='3' fill='none' stroke-linecap='round'/%3E%3C/svg%3E">
+    <link rel="preconnect" href="https://miaoda.feishu.cn">
+    <link rel="preconnect" href="https://sf3-scmcdn-cn.feishucdn.com" crossorigin>
+    <link rel="stylesheet" href="https://miaoda.feishu.cn/fonts/css2?family=Quicksand:wght@500;600;700;800&amp;family=Noto+Sans+SC:wght@400;500;700;900&amp;display=swap">
+    <script src="https://cdn.tailwindcss.com/3.4.16"></script>
+    <script src="https://fastly.jsdelivr.net/npm/react@18/umd/react.production.min.js"></script>
+    <script src="https://fastly.jsdelivr.net/npm/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://fastly.jsdelivr.net/npm/@babel/standalone@7/babel.min.js"></script>
+    <script src="https://fastly.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['"Quicksand"', '"Noto Sans SC"', 'sans-serif'] },
+                }
+            }
+        }
+    </script>
+    <style>
+        :root {
+            --ink: #40394f;
+            --ink-soft: #7d7391;
+            --coral: #f28d86;
+            --apricot: #ffbf86;
+            --lilac: #a892f0;
+            --mint: #7fcaa8;
+            --sky: #8fbcf0;
+            --line: #efeaf4;
+        }
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            font-family: 'Quicksand', 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+            color: var(--ink);
+            line-height: 1.7;
+            background:
+                radial-gradient(1000px 620px at 6% -10%, #ffe9dc 0%, rgba(255, 233, 220, 0) 62%),
+                radial-gradient(900px 600px at 102% -2%, #e8e3ff 0%, rgba(232, 227, 255, 0) 58%),
+                radial-gradient(1000px 700px at 50% 112%, #e2f5ec 0%, rgba(226, 245, 236, 0) 62%),
+                linear-gradient(160deg, #fffaf6 0%, #f8f7ff 52%, #fdf6ea 100%);
+            background-attachment: fixed;
+            min-height: 100vh;
+            -webkit-font-smoothing: antialiased;
+        }
+        ::selection { background: #ffd9c9; }
+        .clay-card {
+            background: #fff;
+            border-radius: 28px;
+            border: 1px solid rgba(255, 255, 255, 0.9);
+            box-shadow: 0 22px 46px -22px rgba(89, 72, 120, 0.22), 0 4px 14px rgba(89, 72, 120, 0.05);
+        }
+        .clay-card-soft {
+            background: linear-gradient(180deg, #fffdfb, #fff9f6);
+            border-radius: 26px;
+            border: 1px solid #f5ece8;
+            box-shadow: 0 16px 34px -24px rgba(89, 72, 120, 0.24);
+        }
+        .clay-btn {
+            transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.25s ease, filter 0.2s ease;
+            box-shadow: 0 14px 26px -12px rgba(124, 58, 237, 0.35);
+        }
+        .clay-btn:hover { transform: translateY(-3px); filter: saturate(1.05); }
+        .clay-btn:active { transform: translateY(1px); }
+        .btn:focus-visible, .clay-btn:focus-visible, .tap:focus-visible {
+            outline: 3px solid #ffc9a8;
+            outline-offset: 3px;
+        }
+        .tap { cursor: pointer; }
+        .sticker { transform: rotate(-2deg); }
+        .sticker-r { transform: rotate(2deg); }
+
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(14px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade-in { animation: fadeUp 0.55s cubic-bezier(0.22, 0.9, 0.3, 1) both; }
+
+        @keyframes floaty {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-7px); }
+        }
+        .floaty { animation: floaty 5s ease-in-out infinite; }
+
+        @keyframes pop {
+            0% { transform: scale(0.94); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        .pop { animation: pop 0.35s cubic-bezier(0.2, 1, 0.4, 1) both; }
+
+        @media (prefers-reduced-motion: reduce) {
+            .animate-fade-in, .floaty, .pop { animation: none !important; }
+            .clay-btn:hover { transform: none; }
+        }
+
+        .mascot-frame {
+            border-radius: 22px;
+            background: #fff;
+            border: 1px solid #f3ecef;
+            overflow: hidden;
+            transition: transform 0.28s ease, box-shadow 0.28s ease;
+        }
+        .mascot-frame:hover { transform: translateY(-4px) scale(1.02); box-shadow: 0 16px 30px -18px rgba(90, 70, 120, 0.4); }
+
+        .hairline { border-top: 1px dashed #ece5f1; }
+
+        .quote-card {
+            background: linear-gradient(135deg, #fff4ee 0%, #fff0f3 55%, #fef7ea 100%);
+            border: 1px solid #ffdfd2;
+            border-radius: 26px;
+        }
+
+        .advice-item { display: flex; gap: 12px; align-items: flex-start; }
+        .advice-dot {
+            flex: 0 0 auto;
+            width: 8px; height: 8px;
+            margin-top: 9px;
+            border-radius: 999px;
+            background: linear-gradient(135deg, #ffbf86, #f28d86);
+        }
+        .chip {
+            display: inline-flex;
+            align-items: center;
+            padding: 6px 12px;
+            border-radius: 12px;
+            font-size: 12.5px;
+            font-weight: 600;
+            line-height: 1.4;
+        }
+
+        .progress-track { background: #f4eff6; height: 9px; border-radius: 999px; overflow: hidden; }
+        .progress-bar { height: 100%; border-radius: 999px; background: linear-gradient(90deg, #ffc9a8, #f28d86); transition: width 0.4s ease; }
+
+        .option-card {
+            border: 2px solid #f4eff4;
+            background: #fff;
+            border-radius: 20px;
+            transition: border-color 0.2s ease, background 0.2s ease, transform 0.15s ease;
+        }
+        .option-card:hover { border-color: #ffd2bd; background: #fffaf7; }
+        .option-card.selected { border-color: #f28d86; background: #fff5f1; }
+
+        .dim-bar-wrap { display: flex; width: 100%; height: 10px; border-radius: 999px; overflow: hidden; background: #f6f2f7; }
+
+        .modal-bg { background: rgba(64, 57, 79, 0.38); backdrop-filter: blur(6px); }
+
+        @media (max-width: 480px) {
+            .clay-card { border-radius: 22px; }
+            .mascot-frame { border-radius: 18px; }
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        /* ===================== 题库 ===================== */
+        const fullQuestionBank = [
+            { id: 1, text: "在一个大型社交聚会中，你通常倾向于：", options: [
+                { text: "主动结识新朋友，和大家聊得火热", type: "E", score: 2 },
+                { text: "跟熟络的朋友在一起，偶尔和旁边的人搭话", type: "E", score: 1 },
+                { text: "倾向于和几个熟悉的人深入交流", type: "I", score: 1 },
+                { text: "尽量找安静的角落，或早早离场独自呆着", type: "I", score: 2 }
+            ]},
+            { id: 2, text: "周末你更愿意如何度过？", options: [
+                { text: "参加派对、聚会或户外热闹的活动", type: "E", score: 2 },
+                { text: "和三两知己逛街、看电影或聚餐", type: "E", score: 1 },
+                { text: "在家看书、追剧、打游戏，享受独处时光", type: "I", score: 2 },
+                { text: "做自己的一人手艺活、拼图或深度思考", type: "I", score: 1 }
+            ]},
+            { id: 3, text: "工作或学习了一整周后，你的“充电”方式是：", options: [
+                { text: "呼朋唤友一起去KTV或吃大餐放松", type: "E", score: 2 },
+                { text: "和同事同学一起聚餐聊天", type: "E", score: 1 },
+                { text: "一个人安安静静地泡个澡或听音乐", type: "I", score: 2 },
+                { text: "关掉手机，谁也不理，独自大睡一场", type: "I", score: 1 }
+            ]},
+            { id: 4, text: "面对陌生人的主动搭讪，你的第一反应通常是：", options: [
+                { text: "热情回应，顺势和对方愉快地聊起来", type: "E", score: 2 },
+                { text: "礼貌微笑并简短应答", type: "E", score: 1 },
+                { text: "内心有点小尴尬，客套两句便结束话题", type: "I", score: 1 },
+                { text: "恨不得立刻隐身，觉得应付陌生人很耗精力", type: "I", score: 2 }
+            ]},
+            { id: 5, text: "在公开会议或课堂上发言时，你感觉：", options: [
+                { text: "精力充沛，享受成为焦点并表达观点", type: "E", score: 2 },
+                { text: "比较坦然，能够正常把话说清楚", type: "E", score: 1 },
+                { text: "心跳加速，尽量避免被点名发言", type: "I", score: 1 },
+                { text: "极度抗拒，宁愿写长篇大论也不愿当众开口", type: "I", score: 2 }
+            ]},
+            { id: 6, text: "当你的想法或计划被打断，需要临时加入集体讨论时：", options: [
+                { text: "觉得很有趣，当场碰撞出新的灵感火花", type: "E", score: 2 },
+                { text: "能够迅速调整状态并参与进去", type: "E", score: 1 },
+                { text: "需要一点时间适应，希望自己能先理清思路", type: "I", score: 1 },
+                { text: "感到被打扰和被打乱，需要独自静静", type: "I", score: 2 }
+            ]},
+            { id: 7, text: "你身边的朋友怎么评价你的社交属性？", options: [
+                { text: "社交达人、气氛组组长、自来熟", type: "E", score: 2 },
+                { text: "随和开朗，聚会时也挺健谈", type: "E", score: 1 },
+                { text: "慢热型，熟了之后是个话痨", type: "I", score: 1 },
+                { text: "高冷、内敛、需要好久才能走入内心", type: "I", score: 2 }
+            ]},
+            { id: 8, text: "在电话沟通与文字聊天之间，你更偏爱：", options: [
+                { text: "直接语音或打电话，高效痛快", type: "E", score: 2 },
+                { text: "视情况而定，紧急时打电话", type: "E", score: 1 },
+                { text: "能发文字就绝不打电话，文字更安全", type: "I", score: 1 },
+                { text: "看到电话铃响就焦虑，只喜欢发表情包和文字", type: "I", score: 2 }
+            ]},
+            { id: 9, text: "在阅读小说或观看科幻电影时，你更容易被什么吸引？", options: [
+                { text: "具体的画面、特效、逼真的场景细节", type: "S", score: 2 },
+                { text: "故事情节的发展和人物命运", type: "S", score: 1 },
+                { text: "故事背后的深层寓意或宏大世界观设定", type: "N", score: 1 },
+                { text: "导演隐喻的哲学思考、对未来科技的反思", type: "N", score: 2 }
+            ]},
+            { id: 10, text: "当你学习一项新技能或组装新家具时，你倾向于：", options: [
+                { text: "严格按照说明书步骤一步步操作", type: "S", score: 2 },
+                { text: "先看大致图示，边做边摸索", type: "S", score: 1 },
+                { text: "凭直觉上手，觉得说明书太啰嗦", type: "N", score: 1 },
+                { text: "完全自由发挥，甚至想改进它的结构", type: "N", score: 2 }
+            ]},
+            { id: 11, text: "对于未来的规划，你通常的习惯是：", options: [
+                { text: "立足当下，做好手头的每一件现实小事", type: "S", score: 2 },
+                { text: "制定近期几个月切实可行的具体目标", type: "S", score: 1 },
+                { text: "脑海里常常充满未来的各种奇思妙想和可能", type: "N", score: 1 },
+                { text: "构想五年甚至十年后的宏大愿景，享受概念设计", type: "N", score: 2 }
+            ]},
+            { id: 12, text: "你更倾向于信任哪种类型的信息？", options: [
+                { text: "看得见摸得着的客观事实、数据和过往经验", type: "S", score: 2 },
+                { text: "身边人真实发生过的事情", type: "S", score: 1 },
+                { text: "内在的第六感、直觉以及对趋势的敏锐捕捉", type: "N", score: 1 },
+                { text: "抽象的理论、灵感以及尚未被验证的创新可能", type: "N", score: 2 }
+            ]},
+            { id: 13, text: "当别人向你描述一件事情时，你更关注：", options: [
+                { text: "具体的细节、时间、地点和人物原话", type: "S", score: 2 },
+                { text: "事情的前因后果和直接结果", type: "S", score: 1 },
+                { text: "对方的弦外之音和背后的潜台词", type: "N", score: 1 },
+                { text: "这件事象征着什么模式，以及未来的走向", type: "N", score: 2 }
+            ]},
+            { id: 14, text: "你如何看待“常规”与“传统”？", options: [
+                { text: "历经时间考验的常规和传统往往最省心管用", type: "S", score: 2 },
+                { text: "大部分情况下遵守常规比较稳妥", type: "S", score: 1 },
+                { text: "传统有时会束缚手脚，喜欢尝试新花样", type: "N", score: 1 },
+                { text: "常规就是用来打破的，讨厌因循守旧", type: "N", score: 2 }
+            ]},
+            { id: 15, text: "当朋友向你倾诉遭遇不公时，你的第一反应通常是：", options: [
+                { text: "帮他理性分析利弊，找出解决问题的最优逻辑", type: "T", score: 2 },
+                { text: "先听听事实，再给客观建议", type: "T", score: 1 },
+                { text: "先给予强烈的感同身受和情绪安抚，狠狠吐槽", type: "F", score: 1 },
+                { text: "无条件站在朋友这边，先抱抱他，对错放一边", type: "F", score: 2 }
+            ]},
+            { id: 16, text: "在职场或团队决策中，你认为什么最重要？", options: [
+                { text: "客观公正的规则、效率和结果导向", type: "T", score: 2 },
+                { text: "按章办事，兼顾效率", type: "T", score: 1 },
+                { text: "团队成员的感受、氛围和士气", type: "F", score: 1 },
+                { text: "照顾到每一个人的情感，避免任何人受委屈", type: "F", score: 2 }
+            ]},
+            { id: 17, text: "面对严厉的批评和客观的错误指出，你的感受是：", options: [
+                { text: "对事不对人，只要说得对就虚心接受并改正", type: "T", score: 2 },
+                { text: "理性听取，虽然心里有点小波澜", type: "T", score: 1 },
+                { text: "容易感到沮丧，觉得对方语气太冲伤了感情", type: "F", score: 1 },
+                { text: "十分走心甚至难过很久，觉得对方否定了自己", type: "F", score: 2 }
+            ]},
+            { id: 18, text: "做重大决定（如换工作、买房）时，你更依赖：", options: [
+                { text: "理性计算成本收益、数据对比和可行性分析", type: "T", score: 2 },
+                { text: "综合现实条件和利弊清单", type: "T", score: 1 },
+                { text: "自己的内心价值观和这件事是否让自己开心", type: "F", score: 1 },
+                { text: "凭内心的热情和对所爱之人的影响来决定", type: "F", score: 2 }
+            ]},
+            { id: 19, text: "看电影或电视剧时，你更容易因为什么而落泪？", options: [
+                { text: "极少因剧情哭泣，更关注逻辑硬不硬核", type: "T", score: 2 },
+                { text: "宏大叙事中的悲壮牺牲", type: "T", score: 1 },
+                { text: "角色之间细腻感人的亲情、友情或爱情羁绊", type: "F", score: 1 },
+                { text: "极其容易共情，主角受委屈或动物受伤就泪崩", type: "F", score: 2 }
+            ]},
+            { id: 20, text: "当不得不拒绝别人的请求时，你会：", options: [
+                { text: "直接干脆地说明理由和客观情况，拒绝内耗", type: "T", score: 2 },
+                { text: "委婉表达，讲清不行的原因", type: "T", score: 1 },
+                { text: "内心纠结万分，担心对方会生气的歉意满满", type: "F", score: 1 },
+                { text: "宁愿自己吃亏委屈，也难以开口说“不”", type: "F", score: 2 }
+            ]},
+            { id: 21, text: "外出旅游前，你的行前准备习惯是：", options: [
+                { text: "提前做好精确到小时的详细攻略和备用方案", type: "J", score: 2 },
+                { text: "订好酒店和机票，列一个大致的景点清单", type: "J", score: 1 },
+                { text: "只有大概目的地，到了当地随性发挥", type: "P", score: 1 },
+                { text: "买张机票说走就走，主打随心所欲惊喜盲盒", type: "P", score: 2 }
+            ]},
+            { id: 22, text: "面对生活中的日常任务（如交作业、做报告、大扫除）：", options: [
+                { text: "习惯提前几天甚至一周就规划并提前搞定", type: "J", score: 2 },
+                { text: "按时按计划推进，不喜欢拖到最后", type: "J", score: 1 },
+                { text: "常常拖到截止日期前夕才开始爆发赶工", type: "P", score: 1 },
+                { text: "死线是第一生产力，不到最后一刻绝不开始", type: "P", score: 2 }
+            ]},
+            { id: 23, text: "你的卧室或办公桌通常的状态是：", options: [
+                { text: "井井有条，每件物品都有固定归宿，定期整理", type: "J", score: 2 },
+                { text: "比较整洁，找东西很方便", type: "J", score: 1 },
+                { text: "表面看起来有点乱，但我自己知道东西在哪", type: "P", score: 1 },
+                { text: "“乱中有序”，堆满了各种随手放下的杂物", type: "P", score: 2 }
+            ]},
+            { id: 24, text: "如果原本约好的行程突然被取消或临时更改：", options: [
+                { text: "会感到计划被打乱的烦躁，需要重新安排", type: "J", score: 2 },
+                { text: "稍微适应一下，调整接下来的安排", type: "J", score: 1 },
+                { text: "无所谓，刚好省下来的时间可以自由支配", type: "P", score: 1 },
+                { text: "甚至还有点小窃喜，最喜欢不期而遇的变故", type: "P", score: 2 }
+            ]},
+            { id: 25, text: "在处理生活中的各项事务时，你更倾向于：", options: [
+                { text: "凡事有计划、有大纲、有条不紊地推进", type: "J", score: 2 },
+                { text: "定个大框架，具体步骤灵活变通", type: "J", score: 1 },
+                { text: "走一步算一步，随机应变能力极强", type: "P", score: 1 },
+                { text: "极其讨厌被条条框框束缚，喜欢绝对自由", type: "P", score: 2 }
+            ]},
+            { id: 26, text: "当你接触一个完全陌生的领域时，你的第一反应是：", options: [
+                { text: "先找一本靠谱的入门书或课程，按体系学", type: "S", score: 2 },
+                { text: "问问身边懂行的人，照着做一遍", type: "S", score: 1 },
+                { text: "自己先乱摸一通，靠直觉找感觉", type: "N", score: 1 },
+                { text: "立刻想象它能和哪些领域组合出全新的可能", type: "N", score: 2 }
+            ]},
+            { id: 27, text: "团队里有人因为失误拖累了整体进度，你更倾向于：", options: [
+                { text: "直接指出问题，同时推动补救方案落地", type: "T", score: 2 },
+                { text: "先复盘流程哪里出了漏洞，再谈责任", type: "T", score: 1 },
+                { text: "先关心他此刻的压力，再一起讨论怎么补", type: "F", score: 1 },
+                { text: "先安慰他别太自责，事情之后慢慢再说", type: "F", score: 2 }
+            ]},
+            { id: 28, text: "你更希望别人怎么评价你？", options: [
+                { text: "靠谱、专业、判断力强", type: "T", score: 2 },
+                { text: "做事有条理、讲道理", type: "T", score: 1 },
+                { text: "温柔、好相处、不让人有压力", type: "F", score: 1 },
+                { text: "很有爱心、让人安心、值得托付", type: "F", score: 2 }
+            ]},
+            { id: 29, text: "对于突如其来的空闲时间（比如临时放假），你会：", options: [
+                { text: "立刻安排点事情，完全闲下来会有点不安", type: "J", score: 2 },
+                { text: "先列个想做的事清单，挑几件完成", type: "J", score: 1 },
+                { text: "随便躺着，想到什么就干什么", type: "P", score: 1 },
+                { text: "开心到飞起，终于可以毫无计划地浪费一天", type: "P", score: 2 }
+            ]},
+            { id: 30, text: "你出门前的状态更接近：", options: [
+                { text: "提前一晚就把所有东西收拾妥当", type: "J", score: 2 },
+                { text: "出门前十分钟再检查一遍有没有漏", type: "J", score: 1 },
+                { text: "一边走一边往包里塞东西", type: "P", score: 1 },
+                { text: "到了目的地才发现忘带，但也不太在意", type: "P", score: 2 }
+            ]}
+        ];
+
+        function getRandomTestQuestions() {
+            const e_i = fullQuestionBank.filter(q => q.options[0].type === 'E' || q.options[0].type === 'I');
+            const s_n = fullQuestionBank.filter(q => q.options[0].type === 'S' || q.options[0].type === 'N');
+            const t_f = fullQuestionBank.filter(q => q.options[0].type === 'T' || q.options[0].type === 'F');
+            const j_p = fullQuestionBank.filter(q => q.options[0].type === 'J' || q.options[0].type === 'P');
+
+            function shuffle(array) {
+                const arr = [...array];
+                for (let i = arr.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [arr[i], arr[j]] = [arr[j], arr[i]];
+                }
+                return arr;
+            }
+
+            const selected = [
+                ...shuffle(e_i).slice(0, 8),
+                ...shuffle(s_n).slice(0, 7),
+                ...shuffle(t_f).slice(0, 8),
+                ...shuffle(j_p).slice(0, 7)
+            ];
+            return shuffle(selected);
+        }
+
+        /* ===================== 16 型人格资料 ===================== */
+        const mbtiData = {
+            INTJ: {
+                name: "建筑师", group: "Analysts", groupName: "分析家",
+                slogan: "把世界当作一张棋盘，先想三步，再落子。",
+                summary: "你的脑袋里常年放着一张未来蓝图，别人还在找入口，你已经推演到第三层。",
+                portrait: "你习惯先看清全局再动手，喜欢一个人把复杂的事拆成清晰的结构。你不太擅长说漂亮话，可你的判断常常经得起时间检验。你对平庸的容忍度很低，对自己更狠——所以你看起来冷静疏离，其实只是把全部热情都押在了「把事情做成」这件事上。你真正需要的从来不是热闹，而是被准确地理解。",
+                strengths: ["长远规划", "独立判断", "抗压专注", "把混乱理出秩序"],
+                blindspots: ["完美主义常把你拖在原地", "习惯把情绪当成噪音", "先审视再靠近，容易让人有距离感", "关心说不出口，被误读成冷淡"],
+                advice: ["允许「七十分版本」先上线，剩下的三十分边跑边补——完美常常是拖延最漂亮的借口。", "每周留一次不解决问题的对话，只听、不分析，让别人感觉到你愿意在场。", "把在乎说出口，哪怕只是「今天累不累」——你的沉默，别人读不懂。"],
+                warm: "你不需要变得热络才值得被爱。那种把每件事想到底的认真，本身就是一种很少见的温柔。慢一点也没关系，你已经在自己的路上。",
+                careers: ["软件架构师", "战略顾问", "投资分析师", "科研工作者"],
+                love: "在亲密关系里深情且忠诚，看重精神共鸣与智力匹配，想要一个能一起变强的同路人。",
+                match: "ENFP / ENTP"
+            },
+            INTP: {
+                name: "逻辑学家", group: "Analysts", groupName: "分析家",
+                slogan: "对知识有止不住的胃口，一个问题能追到天亮。",
+                summary: "你脑子里同时开着二十个窗口，每一个都在问「为什么」。",
+                portrait: "你对世界的好奇几乎没有边界，一个有劲的问题能让你从傍晚想到凌晨。你不喜欢被现成的规矩推着走，更愿意自己搭一套能自我解释的模型。别人说你「想太多、不做」，其实你只是在等逻辑闭合的那一刻。你的感情藏在细节里，可能是一句认真回答的废话，也可能是记得别人随口提过的小事。",
+                strengths: ["抽象思考", "逻辑拆解", "创意联想", "对真相的诚实"],
+                blindspots: ["想得太多、动手太少", "看到消息却忘了回", "对琐事迅速失去耐心", "情绪表达偏少，容易让人觉得被冷落"],
+                advice: ["给想法设一个「落地期限」，先做出粗糙版本，比想出十个完美方案更有用。", "把「我在忙」换成「我看到了，晚点回你」，一句解释能省掉对方一整天的猜测。", "烦乱时先回到身体：走十分钟、睡一觉，很多死结会自己松开。"],
+                warm: "你不必逼自己合群，也不必为「想得多」道歉。世界需要有人认真追问为什么，而你很擅长这件事。也请记得照顾好自己——包括被你自己照顾。",
+                careers: ["程序员", "数据科学研究员", "产品策略", "学术研究者"],
+                love: "喜欢与伴侣聊深奥的话题，温柔但需要充足的个人空间，最怕被追问「你到底在想什么」。",
+                match: "ENTJ / ESTJ"
+            },
+            ENTJ: {
+                name: "指挥官", group: "Analysts", groupName: "分析家",
+                slogan: "看到问题的那一刻，你已经在找方案和负责人。",
+                summary: "你的存在感来自一种确定感——只要你在，事情就会被推进。",
+                portrait: "你天然想掌控局面，讨厌含糊、拖延和「再看看」。你能迅速判断谁适合做什么，并把资源推到最需要的地方。别人有时觉得你太强势，其实你只是不能忍受明明能做成的事被浪费。你的温柔很少示弱，它通常表现为一句「这件事我来兜」。",
+                strengths: ["决断力", "资源整合", "目标导向", "把不可能拆成可执行"],
+                blindspots: ["语速快过别人接受的速度", "把脆弱当成低效", "容易替别人做决定", "忽略过程中的感受"],
+                advice: ["推进之前先问一句「你怎么想」，让别人参与进来，执行力反而会翻倍。", "把「这不对」换成「我们试试另一个方向」，同样的判断，更少的对抗。", "给自己留一点无所事事的时间，你不是永动机，休息不是效率的敌人。"],
+                warm: "你已经在替很多人扛着重量了。允许自己偶尔只是一个人，而不是一支队伍。说真的，你已经做得够好了。",
+                careers: ["企业高管", "创业者", "律师", "项目总监"],
+                love: "把感情也当作需要共同成长的长期项目，保护欲、责任感和主导性都很强，只是别把伴侣当下属。",
+                match: "INTP / ISTP"
+            },
+            ENTP: {
+                name: "辩论家", group: "Analysts", groupName: "分析家",
+                slogan: "任何观点都值得被挑战一次，包括你自己的。",
+                summary: "你脑子转得比嘴还快，最快乐的事是把一个结论拆开看看里面有什么。",
+                portrait: "你享受智力上的碰撞，也擅长用玩笑把严肃的话说出来。你对新鲜想法的热情来得很快，在重复里失去兴趣也同样快。别人说你「抬杠」，其实你只是受不了不假思索的理所当然。你真正渴望的，是有人能跟上你的思路，并且不怕被你反驳。",
+                strengths: ["快速反应", "创意生成", "把复杂讲得有趣", "打破僵局"],
+                blindspots: ["好奇有余、收尾不足", "玩笑有时会扎到人", "讨厌束缚，又很难长期停留", "想法多到别人跟不上"],
+                advice: ["每次开脑洞时，顺手写下「谁来做第一步」，让灵感有个落地的钩子。", "争到兴头上时停三秒，问问自己：你要的是赢，还是更近的关系。", "把一件小事坚持做完，你会发现自己比想象中更能承担。"],
+                warm: "你身上那股「什么都可以再想想」的劲儿，是很珍贵的生命力。不必急着变稳重，只要记得给在意你的人留一点确定感。",
+                careers: ["创意总监", "公关顾问", "产品经理", "创业者"],
+                love: "恋爱里充满情趣和新鲜感，喜欢能接住自己跳跃思维的人，最怕关系变成日复一日的流程。",
+                match: "INFJ / INTJ"
+            },
+            INFJ: {
+                name: "提倡者", group: "Diplomats", groupName: "外交家",
+                slogan: "安静地看见别人，也安静地守着心里那盏灯。",
+                summary: "你总能听懂别人话里没说出口的那一半。",
+                portrait: "你对人的情绪有近乎本能的敏锐，一个眼神、一句停顿，你就能读出背后的重量。你看起来温和，内心却有一套极其坚定的标准，有些事你绝不妥协。你常常在照顾完所有人的感受之后，才发现没人问过你累不累。你不是没有脾气，只是把锋利的那一面朝向了自己。",
+                strengths: ["深度共情", "洞察动机", "长期主义", "把理想落成行动"],
+                blindspots: ["过度承担别人的情绪", "习惯性隐藏自己的需求", "理想与现实的落差容易让你疲惫", "难以拒绝"],
+                advice: ["每天留一段「谁也不服务」的时间，哪怕只有十五分钟，那是你的充电口。", "把「我可以」改成「我需要想一想」，你有权慢一点回应。", "找一个能接住你的人，把心里的话说出来——你不必永远做那个懂事的人。"],
+                warm: "你给过很多人光。现在请把一点光留给自己吧。你的敏感不是负担，它正是你之所以是你的原因。",
+                careers: ["心理咨询师", "内容创作者", "人力资源总监", "公益项目负责人"],
+                love: "追求灵魂深处的契合，对伴侣极度温柔体贴，愿意付出全部真心，但也需要对方看得见你的付出。",
+                match: "ENFP / ENTP"
+            },
+            INFP: {
+                name: "调停者", group: "Diplomats", groupName: "外交家",
+                slogan: "心里住着一整个浪漫世界，只是很少对外开放。",
+                summary: "你的柔软不是没主见，而是把世界放进心里反复摆弄。",
+                portrait: "你对美和真诚有近乎苛刻的敏感，一首歌、一句台词都能在心里放很久。你不擅长争辩，遇到冲突第一反应是退让和自责。别人以为你好说话，其实你只是不愿把关系弄难看。你有一个非常完整的内心世界，只是需要足够安全的人，才愿意打开那扇门。",
+                strengths: ["想象力", "真诚", "审美感受力", "体谅他人的处境"],
+                blindspots: ["内耗严重", "过度自责", "回避冲突", "把委屈默默咽下去"],
+                advice: ["把「我不舒服」说出来，不必忍到极限才表达，小声的边界比沉默更有力量。", "写下此刻的感受，文字是你的出口，也是你整理自己的方式。", "允许自己做出「不完美但属于我」的选择，你的人生不是交给别人的作业。"],
+                warm: "你认真对待感情和世界的样子，真的很动人。别因为敏感责怪自己，正是它让你看得见别人错过的美。",
+                careers: ["心理工作者", "自由撰稿人", "插画师", "公益组织专员"],
+                love: "浪漫至极，把伴侣视作生命里的唯一，渴望纯洁而深沉的精神羁绊，也因此容易被现实划伤。",
+                match: "ENFJ / ENTJ"
+            },
+            ENFJ: {
+                name: "主人公", group: "Diplomats", groupName: "外交家",
+                slogan: "你一进门，空气就变暖了。",
+                summary: "你天生会照顾人，也天生容易把别人的事当成自己的事。",
+                portrait: "你能迅速感到一个房间里的气氛，并本能地去调节它。你擅长鼓励别人，说出的话常常正好落在对方最需要的地方。你把关系看得很重，也因此容易过度付出，甚至在别人没回应时怀疑是不是自己不够好。你的热情不是表演，你是真的希望大家都好。",
+                strengths: ["感染力", "情绪照料", "组织人心", "把愿景讲得让人相信"],
+                blindspots: ["过度操心", "害怕让人失望", "把别人的情绪当成自己的责任", "忽略自己的极限"],
+                advice: ["帮别人之前先问自己一句「我现在有余力吗」，善意需要可持续。", "允许有些人不领情，那不代表你做得不够，只代表你们不同频。", "每周做一件只为自己开心的事，不用解释，也不用发朋友圈。"],
+                warm: "你照亮过很多人。请相信，你也值得被同样温柔地对待，而不只是那个永远在付出的人。",
+                careers: ["企业培训师", "教师", "公关经理", "团队负责人"],
+                love: "无微不至地照顾伴侣的情绪，是温暖体贴的灵魂伴侣，但要小心把「照顾」变成「安排」。",
+                match: "INFP / ISFP"
+            },
+            ENFP: {
+                name: "竞选者", group: "Diplomats", groupName: "外交家",
+                slogan: "世界这么大，值得为每件有趣的事欢呼一次。",
+                summary: "你的热情像烟花，点亮自己，也顺手点亮旁边的人。",
+                portrait: "你对人和世界都抱着巨大的好奇，一场聊天里能同时聊梦想、八卦和哲学。你很容易被新事物点燃，也很容易在重复里失温。别人说你三分钟热度，其实你只是诚实地跟着心动走。你害怕的从来不是失败，而是生活变得一成不变。",
+                strengths: ["热情", "创意", "共情", "把气氛救回来"],
+                blindspots: ["难以收尾", "情绪起伏大", "答应太多事", "一被无聊困住就焦虑"],
+                advice: ["挑一件真正在意的事，给它三个月不换赛道——深度会给你意想不到的自由。", "情绪最高的时候别做重大决定，等一天，答案通常更清楚。", "学会说「这次我先不接」，你的热情才有地方真正燃烧。"],
+                warm: "你不必变得「稳」才值得被喜欢。保有这份热望，同时给自己一点耐心，你会走得很远很远。",
+                careers: ["市场策划", "主持人", "旅行内容创作者", "演员"],
+                love: "恋爱充满惊喜与浪漫，渴望和伴侣一起探索世界，需要被理解你的「不安分」。",
+                match: "INTJ / INFJ"
+            },
+            ISTJ: {
+                name: "物流师", group: "Sentinels", groupName: "守护者",
+                slogan: "说到做到，是你最朴素的浪漫。",
+                summary: "你的可靠不是天赋，是一次次把小事做到底的结果。",
+                portrait: "你相信秩序和承诺，答应的事会记在心里并按时完成。你不喜欢夸张的表达，也不太擅长即兴，但你的稳定让人安心。别人可能觉得你保守，其实你只是不愿意拿别人的信任去冒险。你的情感很深，只是习惯用行动代替语言。",
+                strengths: ["责任感", "执行力", "细节把控", "长期稳定"],
+                blindspots: ["变化会带来不安", "不轻易求助", "对不守规矩的人缺少耐心", "情绪很少说出口"],
+                advice: ["计划被打乱时，先告诉自己「变化不是失败」，给日程留一格弹性。", "偶尔做一件没计划的小事，比如换条路回家，世界会松动一点。", "把在意说出来，你做的很多事，别人未必读得懂那份心意。"],
+                warm: "你的稳，是很多人生命里的地基。也请记得，你不必永远坚强，累了可以靠一靠。",
+                careers: ["注册会计师", "审计师", "行政总监", "法官"],
+                love: "用行动代替甜言蜜语，极其忠诚稳定，是能一起把日子过长的人。",
+                match: "ESFP / ESTP"
+            },
+            ISFJ: {
+                name: "守卫者", group: "Sentinels", groupName: "守护者",
+                slogan: "你记得所有人的喜好，却常常忘了自己。",
+                summary: "你的温柔有很具体的样子：一杯温水、一句「记得吃饭」。",
+                portrait: "你天生会照顾人，记得别人的口味、忌口和重要日子。你在关系里安静而持续地付出，很少索取。遇到冲突时，你第一反应是「是不是我做错了」。你把和谐看得很重，有时重到委屈自己。你的力量不在声量，而在那种「有你在就安心」的存在感。",
+                strengths: ["体贴", "可靠", "记挂细节", "把日常过好"],
+                blindspots: ["不懂拒绝", "习惯性自责", "把需求藏起来", "容易被理所当然地消耗"],
+                advice: ["练习一句完整的拒绝：「这次我可能帮不上」，不解释三遍也没关系。", "把自己也写进待办清单，你的需要和他的需要一样重要。", "允许关系里有一点不愉快，不必每次都靠你一个人去修好它。"],
+                warm: "你给世界的温柔，值得被同样温柔地还回来。就从今天对自己好一点开始吧。",
+                careers: ["医护工作者", "幼儿教师", "社会工作者", "行政主管"],
+                love: "温柔体贴、默默付出，把家庭和伴侣的幸福放在第一位，但要小心把对方宠成不珍惜。",
+                match: "ESTP / ESFP"
+            },
+            ESTJ: {
+                name: "总经理", group: "Sentinels", groupName: "守护者",
+                slogan: "事情总得有人管，而你从来不躲。",
+                summary: "你把混乱变成流程，把流程变成结果。",
+                portrait: "你务实、直接，讨厌空谈。看到问题你会立刻评估资源和责任，然后推着事情往前走。你对承诺看得很重，也希望别人一样。有时你显得不容置疑，其实你只是担心失控会让所有人受损。你的爱很少挂在嘴边，通常体现在一句「都安排好了」。",
+                strengths: ["组织力", "判断力", "担当", "把目标落到实处"],
+                blindspots: ["控制欲偏强", "直言容易伤人", "对情绪需求不够敏感", "难以接受「差不多也行」"],
+                advice: ["下结论前多留三十秒，让别人把话说完，你会得到更多信息。", "把「应该」换成「你觉得呢」，同样的要求，更容易被接受。", "允许生活里有不做计划的部分，松弛不是失序。"],
+                warm: "你撑起了很多人的秩序感，这很了不起。也请允许自己在某些时刻，什么都不管。",
+                careers: ["运营总监", "项目经理", "公务员", "财务负责人"],
+                love: "稳定可靠、家庭责任感强，喜欢生活井井有条，只是别忘了感情也需要一点无用的浪漫。",
+                match: "ISFP / ISTP"
+            },
+            ESFJ: {
+                name: "执政官", group: "Sentinels", groupName: "守护者",
+                slogan: "你在的地方，就有热汤和笑声。",
+                summary: "你把关系当成一座需要每天浇水的花园。",
+                portrait: "你热情、周到，天生懂得怎么让一群人舒服。你记得每个人的偏好，也愿意为一场聚会忙前忙后。你在意别人的评价，一句冷淡的话能让你反复回想。你不是爱操心，只是把「大家都好」当成了自己的责任。",
+                strengths: ["亲和力", "照顾细节", "营造氛围", "把人心聚起来"],
+                blindspots: ["太在意别人的评价", "过度付出后容易委屈", "怕被冷落", "替别人操心过多"],
+                advice: ["分辨「他需要」和「我以为他需要」，把力气用在真正重要的地方。", "允许自己有一次不周到，关系不会因为你歇一次就崩塌。", "直接说出你的期待，你一直在猜别人，也值得被别人猜一次。"],
+                warm: "你让很多平凡的日子有了温度。别忘了，你也是那个需要被照顾的人。",
+                careers: ["活动策划", "客户服务主管", "人力资源", "社群运营"],
+                love: "重视节日与纪念日，极度需要伴侣的肯定和陪伴，也需要学会自己给自己安全感。",
+                match: "ISTP / ISFP"
+            },
+            ISTP: {
+                name: "鉴赏家", group: "Explorers", groupName: "探险家",
+                slogan: "别废话，先动手试试看。",
+                summary: "你话不多，但手上很稳，问题到你这里通常能被修好。",
+                portrait: "你相信实践胜过讨论，喜欢拆开看看里面怎么运转。你冷静、独立，遇事不慌，别人慌乱时你反而最清醒。你不喜欢被管，也不喜欢黏人的关系。你的在意很难被察觉，通常表现为一句「我已经帮你弄好了」。",
+                strengths: ["动手能力", "临场应变", "冷静", "务实"],
+                blindspots: ["不爱表达", "讨厌被约束", "情绪一紧就抽离", "对长期承诺格外谨慎"],
+                advice: ["在「我帮你弄好了」后面加一句「因为我在意你」，对方才听得懂。", "关系需要定期维护，像保养工具一样，不是坏了才修。", "允许自己说说感受，哪怕只有三个字，也比沉默有力量。"],
+                warm: "你不需要用很多话证明自己，你的可靠已经说明了一切。也请留个门，让别人能靠近你。",
+                careers: ["机械工程师", "飞行员", "硬件工程师", "摄影师"],
+                love: "相处轻松不黏人，用行动解决问题，需要给彼此足够的个人空间。",
+                match: "ESTJ / ESFJ"
+            },
+            ISFP: {
+                name: "探险家", group: "Explorers", groupName: "探险家",
+                slogan: "用眼睛和手感，收藏这个世界的好看。",
+                summary: "你对美有直觉，对人有温度，只是不喜欢被安排。",
+                portrait: "你活在具体的感受里：光线、颜色、气味、一段旋律。你不喜欢冲突，遇到争执常常先退一步，但心里有很清楚的好恶。你的温柔是行动式的，可能是一张手写便签，也可能是悄悄为对方留的那盏灯。你需要自由，也需要被珍惜。",
+                strengths: ["审美", "体贴", "灵活", "真诚"],
+                blindspots: ["回避冲突", "容易压抑情绪", "缺乏长期规划", "被否定时容易自我怀疑"],
+                advice: ["不喜欢就直说「我不太想」，你的感受值得被听见，而不是被绕过去。", "给喜欢的事留一点固定时间，热爱需要被持续喂养。", "在小事上相信自己的判断，你比你以为的更有主见。"],
+                warm: "你身上有一种不争不抢的好看。别急着和谁比较，你的节奏本来就适合你。",
+                careers: ["室内设计师", "时装设计师", "摄影师", "音乐人"],
+                love: "浪漫又有艺术气息，用细腻的行动表达爱意，最怕被粗暴地否定和催促。",
+                match: "ENFJ / ESFJ"
+            },
+            ESTP: {
+                name: "企业家", group: "Explorers", groupName: "探险家",
+                slogan: "先上场，规则边打边学。",
+                summary: "你反应快、胆子大，机会出现时你已经已经在路上了。",
+                portrait: "你享受真实的刺激和即时的反馈，讨厌冗长的会议和空洞的规划。你能迅速读懂场面，知道该说什么、该做什么。你不太喜欢回头看，容易在同一个地方待不住。别人觉得你玩世不恭，其实你只是拒绝把生活过成流程。",
+                strengths: ["行动力", "临场判断", "感染力", "抗压"],
+                blindspots: ["缺乏长性", "说话太直", "容易冒险", "对情绪细节不敏感"],
+                advice: ["给冲动加一道刹车：重大决定先过一夜，你的直觉依然会在。", "培养一件需要长期投入的爱好，它会在你低谷时接住你。", "多留意身边人的表情，很多话他们没有说出口。"],
+                warm: "你身上有让人振奋的生命力。只要在关键的地方多留一点耐心，你能走得很漂亮。",
+                careers: ["创业者", "销售总监", "运动员", "现场导演"],
+                love: "恋爱轰轰烈烈，追求刺激与新鲜感，幽默有魅力，但需要学会把热度维持下去。",
+                match: "ISFJ / ISTJ"
+            },
+            ESFP: {
+                name: "表演者", group: "Explorers", groupName: "探险家",
+                slogan: "把普通的一天，过成值得纪念的一场。",
+                summary: "你天生会让人开心，也天生需要被喜欢。",
+                portrait: "你活在当下，感受力强，能在五分钟内把一个沉闷的场子救活。你慷慨、直率，喜欢就说喜欢，难过也藏不太住。你不太愿意面对沉重的话题，遇到压力时倾向于先转移注意力。你不是不深刻，只是更喜欢用快乐去化解。",
+                strengths: ["感染力", "热情", "共情", "把气氛点亮"],
+                blindspots: ["逃避沉重的话题", "太在意被喜欢", "计划性偏弱", "情绪来得快去得也快"],
+                advice: ["不开心的时候，试着说清楚「我怎么了」，情绪被命名后就没那么可怕。", "给未来留一点小计划，哪怕只是下个月的旅行，也能让你更稳。", "分辨谁是真正在乎你的人，你不必让所有人都喜欢你。"],
+                warm: "你让很多人的日子变亮了一点。也请相信，你值得被喜欢，不是因为你有趣，而是因为你就是你。",
+                careers: ["演员艺人", "时尚买手", "活动主持", "旅行策划"],
+                love: "把恋爱变成一场盛大的派对，给伴侣无尽的快乐与惊喜，也需要对方在你低落时留下来。",
+                match: "ISTJ / ISFJ"
+            }
+        };
+
+        const DIM_READ = {
+            E: "你从人群里获得能量，说出来本身就是在思考。",
+            I: "你从独处里回血，先想清楚再开口让你更自在。",
+            S: "你信任具体和经验，脚踩在地上让你安心。",
+            N: "你对可能性敏感，脑子里常常已经在演下一幕。",
+            T: "你先看对错与逻辑，再处理情绪。",
+            F: "你先感受人的处境，再谈道理。",
+            J: "你靠计划获得掌控感，提前安排让你放松。",
+            P: "你靠灵活获得自由，临场发挥常比计划更好。"
+        };
+
+        const GROUPS = [
+            { key: "Analysts", name: "分析家", en: "Analysts", types: ["INTJ", "INTP", "ENTJ", "ENTP"], desc: "理性、逻辑与战略见长，习惯把问题拆开再重新组装。", tint: "bg-[#f3ecff] text-[#5f4a9e]", ring: "#d7c7ff" },
+            { key: "Diplomats", name: "外交家", en: "Diplomats", types: ["INFJ", "INFP", "ENFJ", "ENFP"], desc: "共情、理想与感染力，最先注意到的是人的感受。", tint: "bg-[#e9f9f0] text-[#2f8a68]", ring: "#bfe9d3" },
+            { key: "Sentinels", name: "守护者", en: "Sentinels", types: ["ISTJ", "ISFJ", "ESTJ", "ESFJ"], desc: "脚踏实地、讲秩序、重承诺，把日子稳稳地撑住。", tint: "bg-[#eaf3ff] text-[#35619e]", ring: "#c6ddfb" },
+            { key: "Explorers", name: "探险家", en: "Explorers", types: ["ISTP", "ISFP", "ESTP", "ESFP"], desc: "自发、灵活、活在当下，用手感和直觉回应世界。", tint: "bg-[#fff4e3] text-[#a4681f]", ring: "#ffdbaa" }
+        ];
+
+        /* ===================== 卡通形象体系 ===================== */
+        const THEME = {
+            Analysts: { body: "#cbb9f7", body2: "#b7a2f1", deep: "#5f4a9e", accent: "#8d6cf0", bg1: "#f7f2ff", bg2: "#e9ddff", face: "#ffeade", hair: "#5c4a8a", soft: "#f0eaff" },
+            Diplomats: { body: "#a9e2c6", body2: "#90d6b4", deep: "#2f876a", accent: "#4fb98c", bg1: "#f1fbf5", bg2: "#dcf4e7", face: "#ffeade", hair: "#4a7d67", soft: "#e8f8f0" },
+            Sentinels: { body: "#b8d5f5", body2: "#9dc3ec", deep: "#35619e", accent: "#5a8fd8", bg1: "#f2f8ff", bg2: "#dfedff", face: "#ffeade", hair: "#4d6b93", soft: "#eaf3ff" },
+            Explorers: { body: "#ffd6a3", body2: "#ffc585", deep: "#b0702c", accent: "#ef9a44", bg1: "#fff8ee", bg2: "#ffead0", face: "#ffeade", hair: "#8a5f3c", soft: "#fff3e2" }
+        };
+
+        function MascotFace({ t, eyes, mouth }) {
+            const ink = "#40394f";
+            return (
+                <g>
+                    <ellipse cx="52" cy="63" rx="6" ry="3.2" fill="#f7a3a0" opacity="0.55" />
+                    <ellipse cx="88" cy="63" rx="6" ry="3.2" fill="#f7a3a0" opacity="0.55" />
+                    {eyes === "happy" && (
+                        <g stroke={ink} strokeWidth="2.8" fill="none" strokeLinecap="round">
+                            <path d="M54 54 q6 -6 12 0" />
+                            <path d="M74 54 q6 -6 12 0" />
+                        </g>
+                    )}
+                    {eyes === "wink" && (
+                        <g>
+                            <circle cx="60" cy="53" r="4.2" fill={ink} />
+                            <circle cx="58.4" cy="51.3" r="1.5" fill="#fff" />
+                            <path d="M74 54 q6 -6 12 0" stroke={ink} strokeWidth="2.8" fill="none" strokeLinecap="round" />
+                        </g>
+                    )}
+                    {(eyes === "dot" || !eyes) && (
+                        <g>
+                            <circle cx="60" cy="53" r="4.3" fill={ink} />
+                            <circle cx="80" cy="53" r="4.3" fill={ink} />
+                            <circle cx="58.5" cy="51.3" r="1.6" fill="#fff" />
+                            <circle cx="78.5" cy="51.3" r="1.6" fill="#fff" />
+                        </g>
+                    )}
+                    {eyes === "star" && (
+                        <g fill={ink}>
+                            <circle cx="60" cy="53" r="4.3" />
+                            <circle cx="80" cy="53" r="4.3" />
+                            <circle cx="58.5" cy="51.3" r="1.8" fill="#fff" />
+                            <circle cx="78.5" cy="51.3" r="1.8" fill="#fff" />
+                            <path d="M86 44 l1.6 4 4 1.6 -4 1.6 -1.6 4 -1.6 -4 -4 -1.6 4 -1.6 z" fill="#f8c15c" />
+                        </g>
+                    )}
+                    {mouth === "open" && (
+                        <g>
+                            <path d="M61 63 q9 12 18 0 z" fill={ink} opacity="0.9" />
+                            <path d="M66 69 q4 3 8 0" fill="#f28d86" />
+                        </g>
+                    )}
+                    {mouth === "smirk" && (
+                        <path d="M61 65 q7 5 14 -1" stroke={ink} strokeWidth="2.6" fill="none" strokeLinecap="round" />
+                    )}
+                    {mouth === "small" && (
+                        <path d="M65 65 q5 4 10 0" stroke={ink} strokeWidth="2.6" fill="none" strokeLinecap="round" />
+                    )}
+                    {(!mouth || mouth === "smile") && (
+                        <path d="M61 64 q9 8 18 0" stroke={ink} strokeWidth="2.8" fill="none" strokeLinecap="round" />
+                    )}
+                </g>
+            );
+        }
+
+        function Mascot({ type }) {
+            const t = THEME[mbtiData[type].group];
+            const gid = "mascot-grad-" + type;
+            const hollow = "#fff";
+
+            const hat = (() => {
+                switch (type) {
+                    case "INTJ":
+                        return (
+                            <g>
+                                <rect x="50" y="45" width="19" height="17" rx="6" fill="#fff" opacity="0.5" stroke="#4a4466" strokeWidth="2" />
+                                <rect x="71" y="45" width="19" height="17" rx="6" fill="#fff" opacity="0.5" stroke="#4a4466" strokeWidth="2" />
+                                <path d="M69 52 h2" stroke="#4a4466" strokeWidth="2" />
+                                <path d="M52 41 h15 M72 41 h14" stroke={t.hair} strokeWidth="2.6" strokeLinecap="round" />
+                            </g>
+                        );
+                    case "INTP":
+                        return (
+                            <g>
+                                <circle cx="60" cy="52" r="11" fill="#fff" opacity="0.45" stroke="#4a4466" strokeWidth="2.2" />
+                                <circle cx="80" cy="52" r="11" fill="#fff" opacity="0.45" stroke="#4a4466" strokeWidth="2.2" />
+                                <path d="M69.5 52 h2.5" stroke="#4a4466" strokeWidth="2.2" />
+                                <path d="M57 30 q6 -8 13 -2 q4 4 9 2" stroke={t.hair} strokeWidth="3" fill="none" strokeLinecap="round" />
+                                <g>
+                                    <circle cx="112" cy="34" r="9" fill="#fff" stroke="#c9bfe4" strokeWidth="1.5" />
+                                    <text x="112" y="39" textAnchor="middle" fontSize="13" fontWeight="800" fill={t.deep}>?</text>
+                                </g>
+                            </g>
+                        );
+                    case "ENTJ":
+                        return (
+                            <g>
+                                <path d="M52 27 L58 14 L64 27 L70 11 L76 27 L82 14 L88 27 Z" fill="#f8c15c" stroke="#d79a34" strokeWidth="1.6" strokeLinejoin="round" />
+                                <rect x="51" y="25" width="38" height="6" rx="3" fill="#f3b34a" stroke="#d79a34" strokeWidth="1.4" />
+                                <circle cx="70" cy="18" r="2" fill="#fff" opacity="0.7" />
+                                <path d="M53 42 h14 M73 42 h14" stroke={t.hair} strokeWidth="3" strokeLinecap="round" />
+                            </g>
+                        );
+                    case "ENTP":
+                        return (
+                            <g>
+                                <path d="M70 28 v-8" stroke="#7d7391" strokeWidth="2.4" />
+                                <circle cx="70" cy="15" r="6" fill="#ffd27a" stroke="#e5a93c" strokeWidth="1.5" />
+                                <path d="M46 66 Q28 60 24 44" stroke={t.body2} strokeWidth="9" fill="none" strokeLinecap="round" />
+                                <path d="M94 66 Q112 60 116 44" stroke={t.body2} strokeWidth="9" fill="none" strokeLinecap="round" />
+                                <g stroke="#f6c04f" strokeWidth="2" strokeLinecap="round">
+                                    <path d="M70 4 v3" /><path d="M61 8 l2 2" /><path d="M79 8 l-2 2" />
+                                </g>
+                                <g>
+                                    <rect x="98" y="30" width="26" height="17" rx="8" fill="#fff" stroke={t.accent} strokeWidth="1.8" />
+                                    <path d="M104 47 l-2 6 l7 -6 z" fill="#fff" stroke={t.accent} strokeWidth="1.8" />
+                                    <rect x="106" y="15" width="24" height="15" rx="7" fill={t.soft} stroke="#d8c8ef" strokeWidth="1.4" />
+                                </g>
+                            </g>
+                        );
+                    case "INFJ":
+                        return (
+                            <g>
+                                <ellipse cx="70" cy="21" rx="19" ry="4.5" fill="none" stroke="#f5c76b" strokeWidth="3.5" />
+                                <path d="M43 60 Q43 22 70 22 Q97 22 97 60 Q88 46 70 46 Q52 46 43 60 Z" fill={t.deep} opacity="0.22" />
+                                <g transform="translate(98,74)">
+                                    <path d="M-6 -6 q6 -8 12 0" stroke="#c9a24a" strokeWidth="2" fill="none" />
+                                    <rect x="-9" y="-6" width="18" height="22" rx="6" fill="#fff9e6" stroke="#e2bf7a" strokeWidth="1.8" />
+                                    <circle cx="0" cy="4" r="4.5" fill="#ffd88a" />
+                                </g>
+                            </g>
+                        );
+                    case "INFP":
+                        return (
+                            <g>
+                                <g transform="translate(92,30)">
+                                    {[0, 72, 144, 216, 288].map((deg, i) => (
+                                        <ellipse key={i} cx="0" cy="-7" rx="4.2" ry="6" fill="#ffc3d3" transform={`rotate(${deg})`} opacity="0.95" />
+                                    ))}
+                                    <circle cx="0" cy="0" r="4" fill="#f9e08a" />
+                                </g>
+                                <g>
+                                    <path d="M104 84 q-7 -8 -13 -1 q-5 6 3 13 l10 8 l10 -8 q8 -7 3 -13 q-6 -7 -13 1 z" fill="#f79a9a" opacity="0.9" transform="scale(0.85) translate(20,4)" />
+                                </g>
+                                <g opacity="0.75">
+                                    <ellipse cx="24" cy="46" rx="5" ry="3" fill="#ffd0df" transform="rotate(-20 24 46)" />
+                                    <ellipse cx="17" cy="62" rx="4" ry="2.4" fill="#d8f0e4" transform="rotate(35 17 62)" />
+                                    <ellipse cx="120" cy="58" rx="4.5" ry="2.6" fill="#ffd0df" transform="rotate(25 120 58)" />
+                                </g>
+                            </g>
+                        );
+                    case "ENFJ":
+                        return (
+                            <g>
+                                <g stroke="#f7c98c" strokeWidth="3" strokeLinecap="round" opacity="0.85">
+                                    <path d="M70 6 v7" /><path d="M40 16 l5 5" /><path d="M100 16 l-5 5" />
+                                    <path d="M24 40 h7" /><path d="M109 40 h7" />
+                                </g>
+                                <path d="M46 64 Q30 58 26 44" stroke={t.body2} strokeWidth="9" fill="none" strokeLinecap="round" />
+                                <path d="M94 64 Q110 58 114 44" stroke={t.body2} strokeWidth="9" fill="none" strokeLinecap="round" />
+                                <g transform="translate(70,24)">
+                                    <path d="M0 -8 q-9 -10 -15 -3 q-5 7 3 14 l12 11 l12 -11 q8 -7 3 -14 q-6 -7 -15 3 z" fill="#f79a9a" />
+                                </g>
+                            </g>
+                        );
+                    case "ENFP":
+                        return (
+                            <g>
+                                <path d="M55 28 L70 6 L85 28 Z" fill="#f7a1a1" stroke="#e08080" strokeWidth="1.4" />
+                                <path d="M60 28 L70 10 L80 28" stroke="#fff" strokeWidth="3" opacity="0.85" />
+                                <circle cx="70" cy="6" r="4" fill="#ffe19a" stroke="#e8bd5a" strokeWidth="1.2" />
+                                <g opacity="0.9">
+                                    <rect x="102" y="22" width="6" height="6" rx="2" fill="#9ad6bb" transform="rotate(20 105 25)" />
+                                    <rect x="24" y="34" width="6" height="6" rx="2" fill="#f7c98c" transform="rotate(-15 27 37)" />
+                                    <circle cx="112" cy="48" r="3" fill="#f79a9a" />
+                                    <circle cx="30" cy="60" r="2.6" fill="#b9a9f0" />
+                                </g>
+                            </g>
+                        );
+                    case "ISTJ":
+                        return (
+                            <g>
+                                <path d="M50 40 q20 -14 40 0" stroke={t.hair} strokeWidth="7" fill="none" strokeLinecap="round" opacity="0.9" />
+                                <g transform="translate(100,76) rotate(-8)">
+                                    <rect x="-10" y="0" width="22" height="28" rx="4" fill="#fff" stroke={t.deep} strokeWidth="1.6" />
+                                    <rect x="-6" y="-4" width="14" height="6" rx="2" fill={t.deep} opacity="0.75" />
+                                    <path d="M-5 9 h12 M-5 14 h12 M-5 19 h8" stroke="#b9c7dc" strokeWidth="1.4" />
+                                </g>
+                            </g>
+                        );
+                    case "ISFJ":
+                        return (
+                            <g>
+                                <path d="M44 46 q26 -20 52 0" stroke="#f7b7c0" strokeWidth="4" fill="none" />
+                                <circle cx="70" cy="33" r="4" fill="#f7b7c0" />
+                                <rect x="52" y="86" width="36" height="26" rx="7" fill="#fff" opacity="0.92" stroke="#e9dff2" strokeWidth="1.4" />
+                                <path d="M60 86 v-6 M80 86 v-6" stroke="#e9dff2" strokeWidth="2" />
+                                <g transform="translate(104,74)">
+                                    <path d="M0 -12 l13 5 v9 q0 12 -13 17 q-13 -5 -13 -17 v-9 z" fill={t.body} stroke={t.deep} strokeWidth="1.8" />
+                                    <path d="M0 -2 q-6 -6 -9 -1 q-2 5 9 11 q11 -6 9 -11 q-3 -5 -9 1 z" fill="#fff" opacity="0.92" />
+                                </g>
+                            </g>
+                        );
+                    case "ESTJ":
+                        return (
+                            <g>
+                                <path d="M55 44 q8 -6 16 -1 q-8 1 -10 7 z" fill={t.deep} opacity="0.16" />
+                                <path d="M85 44 q-8 -6 -16 -1 q8 1 10 7 z" fill={t.deep} opacity="0.16" />
+                                <path d="M70 62 l7 8 l-7 14 l-7 -14 z" fill="#c0645e" />
+                                <g transform="translate(102,80) rotate(-6)">
+                                    <rect x="-11" y="0" width="24" height="18" rx="3" fill="#7d6a58" stroke="#5f5040" strokeWidth="1.4" />
+                                    <rect x="-4" y="-5" width="10" height="5" rx="2" fill="#5f5040" />
+                                    <path d="M-11 5 h24" stroke="#5f5040" strokeWidth="1.2" />
+                                </g>
+                            </g>
+                        );
+                    case "ESFJ":
+                        return (
+                            <g>
+                                <circle cx="70" cy="22" r="10" fill={t.hair} opacity="0.9" />
+                                <path d="M56 26 q12 -12 24 0" stroke="#f7b7c0" strokeWidth="3.4" fill="none" strokeLinecap="round" />
+                                <g transform="translate(102,82)">
+                                    <ellipse cx="0" cy="12" rx="16" ry="4" fill="#e7d9c9" />
+                                    <path d="M-12 12 v-9 h24 v9" fill="#fff6ea" stroke="#e3cdb6" strokeWidth="1.5" />
+                                    <path d="M-10 3 q10 -8 20 0" fill="#ffd7de" />
+                                    <circle cx="0" cy="-10" r="2.6" fill="#f7c97a" />
+                                    <path d="M0 -8 v-5" stroke="#e0a95a" strokeWidth="2" />
+                                </g>
+                            </g>
+                        );
+                    case "ISTP":
+                        return (
+                            <g>
+                                <rect x="43" y="30" width="54" height="9" rx="4" fill="#6f7d8c" opacity="0.9" />
+                                <circle cx="60" cy="34" r="5" fill="#dbe7f0" stroke="#5b6774" strokeWidth="2" />
+                                <circle cx="80" cy="34" r="5" fill="#dbe7f0" stroke="#5b6774" strokeWidth="2" />
+                                <g transform="rotate(28 104 88)">
+                                    <rect x="96" y="74" width="8" height="30" rx="3" fill="#9aa7b4" />
+                                    <circle cx="100" cy="72" r="7" fill="#9aa7b4" />
+                                    <rect x="96" y="68" width="8" height="4" fill="#78848f" />
+                                </g>
+                                <circle cx="46" cy="62" r="2.6" fill="#b9c2cb" opacity="0.9" />
+                            </g>
+                        );
+                    case "ISFP":
+                        return (
+                            <g>
+                                <ellipse cx="70" cy="28" rx="24" ry="9" fill={t.deep} opacity="0.8" transform="rotate(-8 70 28)" />
+                                <circle cx="70" cy="22" r="3.4" fill={t.body} transform="rotate(-8 70 22)" />
+                                <g transform="translate(102,80) rotate(-10)">
+                                    <ellipse cx="0" cy="0" rx="15" ry="13" fill="#fff4e2" stroke="#e2c9a4" strokeWidth="1.6" />
+                                    <ellipse cx="0" cy="0" rx="4" ry="3" fill="#ffd0a6" />
+                                    <circle cx="-7" cy="-6" r="2.6" fill="#f79a9a" />
+                                    <circle cx="6" cy="-6" r="2.6" fill="#9ad6bb" />
+                                    <circle cx="7" cy="4" r="2.6" fill="#b9a9f0" />
+                                    <path d="M-2 -12 q3 -10 9 -12" stroke="#b58f62" strokeWidth="2" fill="none" />
+                                </g>
+                            </g>
+                        );
+                    case "ESTP":
+                        return (
+                            <g>
+                                <rect x="49" y="46" width="18" height="13" rx="5" fill="#3f4a56" opacity="0.95" />
+                                <rect x="73" y="46" width="18" height="13" rx="5" fill="#3f4a56" opacity="0.95" />
+                                <path d="M67 51 h6" stroke="#3f4a56" strokeWidth="2.2" />
+                                <path d="M56 50 l6 5 M64 50 l-5 5" stroke="#8fa4b8" strokeWidth="1.4" opacity="0.7" />
+                                <g>
+                                    <rect x="48" y="112" width="44" height="7" rx="3.5" fill="#7bc3e0" stroke="#4f9dba" strokeWidth="1.4" />
+                                    <circle cx="56" cy="121" r="3.4" fill="#40394f" opacity="0.6" />
+                                    <circle cx="84" cy="121" r="3.4" fill="#40394f" opacity="0.6" />
+                                </g>
+                                <path d="M24 84 l4 -12 l4 12 l-8 0" fill="#f8c15c" opacity="0.9" />
+                            </g>
+                        );
+                    case "ESFP":
+                        return (
+                            <g>
+                                <path d="M88 32 l2.2 5.4 5.4 2.2 -5.4 2.2 -2.2 5.4 -2.2 -5.4 -5.4 -2.2 5.4 -2.2 z" fill="#f8c15c" />
+                                <g transform="translate(102,84) rotate(-12)">
+                                    <rect x="-3.5" y="4" width="7" height="18" rx="3" fill="#8f7ba8" />
+                                    <circle cx="0" cy="0" r="7" fill="#c9b6d8" stroke="#8f7ba8" strokeWidth="1.6" />
+                                    <path d="M0 -7 q6 0 6 5" stroke="#8f7ba8" strokeWidth="2" fill="none" />
+                                </g>
+                                <g opacity="0.85">
+                                    <path d="M24 40 q4 -8 8 0 q4 -6 6 2" stroke={t.accent} strokeWidth="2.4" fill="none" />
+                                    <circle cx="118" cy="46" r="2.8" fill="#9ad6bb" />
+                                </g>
+                            </g>
+                        );
+                    default:
+                        return null;
+                }
+            })();
+
+            const pose = (type === "ENFJ" || type === "ENFP") ? "up" : "down";
+
+            return (
+                <svg viewBox="0 0 140 140" className="w-full h-full">
+                    <defs>
+                        <linearGradient id={gid} x1="0%" y1="0%" x2="0%" y2="100%">
+                            <stop offset="0%" stopColor={t.body} />
+                            <stop offset="100%" stopColor={t.body2} />
+                        </linearGradient>
+                    </defs>
+                    <circle cx="70" cy="70" r="58" fill={t.bg1} />
+                    <circle cx="70" cy="70" r="52" fill="none" stroke={t.bg2} strokeWidth="1.6" strokeDasharray="4 6" />
+                    <ellipse cx="70" cy="122" rx="26" ry="5" fill="#40394f" opacity="0.08" />
+
+                    {(type === "ENTJ") && (
+                        <path d="M46 76 Q34 104 30 120 L110 120 Q106 104 94 76 Z" fill={t.deep} opacity="0.85" />
+                    )}
+
+                    <rect x="59" y="104" width="10" height="15" rx="5" fill={t.body2} />
+                    <rect x="75" y="104" width="10" height="15" rx="5" fill={t.body2} />
+                    <rect x="45" y="72" width="50" height="40" rx="18" fill={`url(#${gid})`} />
+                    {pose === "down" && (
+                        <g>
+                            <rect x="37" y="80" width="10" height="25" rx="5" fill={t.body2} transform="rotate(6 42 92)" />
+                            <rect x="97" y="80" width="10" height="25" rx="5" fill={t.body2} transform="rotate(-6 102 92)" />
+                        </g>
+                    )}
+
+                    <circle cx="70" cy="52" r="26" fill={t.face} />
+                    <path d="M44 52 A26 26 0 0 1 96 52 Q86 39 70 39 Q54 39 44 52 Z" fill={t.hair} />
+                    <MascotFace t={t} eyes={
+                        type === "INFJ" ? "happy" :
+                        type === "INFP" ? "star" :
+                        type === "ENFJ" ? "happy" :
+                        type === "ENTP" ? "wink" : "dot"
+                    } mouth={
+                        type === "ENFP" ? "open" :
+                        type === "ENTP" ? "smirk" :
+                        type === "INTP" ? "small" : "smile"
+                    } />
+
+                    {hat}
+                </svg>
+            );
+        }
+
+        /* ===================== 小图标 ===================== */
+        function Icon({ name, size = 18, color = "currentColor" }) {
+            const paths = {
+                lock: <path d="M6 10V8a6 6 0 0 1 12 0v2M4 10h16v10H4z" />,
+                crown: <path d="M3 8l4 4 5-6 5 6 4-4 2 10H1z" />,
+                spark: <path d="M12 3l2 5 5 2-5 2-2 5-2-5-5-2 5-2z" />,
+                home: <path d="M3 11l9-7 9 7M6 10v10h12V10" />,
+                back: <path d="M15 5l-7 7 7 7" />,
+                refresh: <path d="M4 12a8 8 0 1 1 3 6M4 6v6h6" />,
+                heart: <path d="M12 20s-7-4.6-7-9.4A3.9 3.9 0 0 1 12 8a3.9 3.9 0 0 1 7 2.6C19 15.4 12 20 12 20z" />
+            };
+            return (
+                <svg viewBox="0 0 24 24" width={size} height={size} fill="none" stroke={color} strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" aria-hidden="true">
+                    {paths[name] || null}
+                </svg>
+            );
+        }
+
+        /* ===================== 四维条组件 ===================== */
+        function DimRow({ dim, scores }) {
+            const a = scores[dim.a] || 0;
+            const b = scores[dim.b] || 0;
+            const total = a + b || 1;
+            const pa = Math.round((a / total) * 100);
+            const lead = a >= b ? dim.a : dim.b;
+            return (
+                <div>
+                    <div className="flex items-center justify-between text-[12.5px] font-bold text-slate-600 mb-1.5">
+                        <span>{dim.labelA} {pa}%</span>
+                        <span className="text-slate-400 font-medium">{dim.labelB} {100 - pa}%</span>
+                    </div>
+                    <div className="dim-bar-wrap">
+                        <div style={{ width: pa + "%", background: dim.color, transition: "width .6s ease" }}></div>
+                        <div style={{ width: (100 - pa) + "%", background: dim.soft, transition: "width .6s ease" }}></div>
+                    </div>
+                    <p className="text-[11.5px] text-slate-400 mt-1.5 leading-relaxed">{DIM_READ[lead]}</p>
+                </div>
+            );
+        }
+
+        const DIMS = [
+            { a: "E", b: "I", labelA: "外向 E", labelB: "内向 I", color: "#b394ea", soft: "#ece4fb" },
+            { a: "S", b: "N", labelA: "感觉 S", labelB: "直觉 N", color: "#7fcaa8", soft: "#e2f5eb" },
+            { a: "T", b: "F", labelA: "思考 T", labelB: "情感 F", color: "#8fbcf0", soft: "#e4effc" },
+            { a: "J", b: "P", labelA: "判断 J", labelB: "知觉 P", color: "#f0a868", soft: "#ffe9d2" }
+        ];
+
+        function App() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const token = urlParams.get('token');
+            const isAdmin = urlParams.get('admin') === 'true';
+
+            const [logs, setLogs] = React.useState(() => {
+                try {
+                    const saved = localStorage.getItem('mbti_usage_logs');
+                    return saved ? JSON.parse(saved) : [];
+                } catch (e) { return []; }
+            });
+
+            const tokenUsedKey = `mbti_used_${token}`;
+            const [view, setView] = React.useState(() => {
+                if (isAdmin) return 'home';
+                if (!token) return 'unauthorized';
+                if (localStorage.getItem(`mbti_used_${token}`) === 'true') return 'expired';
+                return 'home';
+            });
+
+            const [questions, setQuestions] = React.useState([]);
+            const [currentIndex, setCurrentIndex] = React.useState(0);
+            const [answers, setAnswers] = React.useState({});
+            const [resultType, setResultType] = React.useState(null);
+            const [scores, setScores] = React.useState(null);
+            const [selectedModalType, setSelectedModalType] = React.useState(null);
+
+            const radarChartRef = React.useRef(null);
+            const chartInstance = React.useRef(null);
+            const timerRef = React.useRef(null);
+
+            const go = (next) => { setView(next); window.scrollTo({ top: 0, behavior: 'smooth' }); };
+
+            const startQuiz = () => {
+                if (!isAdmin && localStorage.getItem(tokenUsedKey) === 'true') { go('expired'); return; }
+                setQuestions(getRandomTestQuestions());
+                setCurrentIndex(0);
+                setAnswers({});
+                go('quiz');
+            };
+
+            const calculateResult = (finalAnswers) => {
+                let counts = { E: 0, I: 0, S: 0, N: 0, T: 0, F: 0, J: 0, P: 0 };
+                Object.values(finalAnswers).forEach(ans => {
+                    if (counts[ans.type] !== undefined) counts[ans.type] += ans.score;
+                });
+                const finalType = (counts.E >= counts.I ? 'E' : 'I') +
+                                  (counts.S >= counts.N ? 'S' : 'N') +
+                                  (counts.T >= counts.F ? 'T' : 'F') +
+                                  (counts.J >= counts.P ? 'J' : 'P');
+
+                setResultType(finalType);
+                setScores(counts);
+
+                if (!isAdmin && token) {
+                    localStorage.setItem(tokenUsedKey, 'true');
+                    const newLog = { token: token, result: finalType, time: new Date().toLocaleString() };
+                    const updatedLogs = [newLog, ...logs];
+                    setLogs(updatedLogs);
+                    localStorage.setItem('mbti_usage_logs', JSON.stringify(updatedLogs));
+                }
+                go('result');
+            };
+
+            const handleSelectOption = (questionId, type, score) => {
+                const next = { ...answers, [questionId]: { type, score } };
+                setAnswers(next);
+                if (timerRef.current) clearTimeout(timerRef.current);
+                timerRef.current = setTimeout(() => {
+                    if (currentIndex < questions.length - 1) {
+                        setCurrentIndex(currentIndex + 1);
+                    } else {
+                        calculateResult(next);
+                    }
+                }, 230);
+            };
+
+            const goBackQuestion = () => {
+                if (timerRef.current) clearTimeout(timerRef.current);
+                if (currentIndex > 0) setCurrentIndex(currentIndex - 1);
+            };
+
+            React.useEffect(() => {
+                if (view === 'result' && scores && resultType && radarChartRef.current) {
+                    if (chartInstance.current) chartInstance.current.destroy();
+                    const theme = THEME[mbtiData[resultType].group];
+                    const ctx = radarChartRef.current.getContext('2d');
+                    chartInstance.current = new Chart(ctx, {
+                        type: 'radar',
+                        data: {
+                            labels: ['外向 E', '直觉 N', '情感 F', '知觉 P', '内向 I', '感觉 S', '思考 T', '判断 J'],
+                            datasets: [{
+                                label: '八维偏好分布',
+                                data: [scores.E || 0, scores.N || 0, scores.F || 0, scores.P || 0, scores.I || 0, scores.S || 0, scores.T || 0, scores.J || 0],
+                                backgroundColor: theme.bg2,
+                                borderColor: theme.accent,
+                                pointBackgroundColor: theme.deep,
+                                pointBorderColor: '#fff',
+                                pointRadius: 4,
+                                borderWidth: 2.5
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            animation: { duration: 900 },
+                            scales: {
+                                r: {
+                                    angleLines: { color: 'rgba(203, 213, 225, 0.45)' },
+                                    grid: { color: 'rgba(203, 213, 225, 0.45)' },
+                                    pointLabels: { font: { size: 12, weight: '700', family: 'Quicksand, Noto Sans SC' }, color: '#6b6478' },
+                                    ticks: { display: false, max: 16, stepSize: 4 }
+                                }
+                            },
+                            plugins: { legend: { display: false } }
+                        }
+                    });
+                }
+                return () => { if (chartInstance.current) { chartInstance.current.destroy(); chartInstance.current = null; } };
+            }, [view, scores, resultType]);
+
+            React.useEffect(() => () => { if (timerRef.current) clearTimeout(timerRef.current); }, []);
+
+            /* ---------- 未授权 / 已失效 ---------- */
+            if (view === 'unauthorized' || view === 'expired') {
+                const expired = view === 'expired';
+                return (
+                    <div className="min-h-screen flex items-center justify-center p-5">
+                        <div className="clay-card max-w-md w-full p-9 text-center animate-fade-in">
+                            <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-5" style={{ background: expired ? '#fff3dd' : '#f3edff', color: expired ? '#c08428' : '#7b60c9' }}>
+                                <Icon name="lock" size={26} />
+                            </div>
+                            <h2 className="text-2xl font-black text-slate-800 mb-2">{expired ? "这条测试链接已经用过了" : "需要专属访问链接"}</h2>
+                            <p className="text-slate-500 text-sm leading-relaxed mb-6">
+                                {expired
+                                    ? "每个专属链接只能完整使用一次，用于生成一份属于你的报告。想再做一次，可以找管理员领取新的链接。"
+                                    : "本页面通过管理员分发的专属测试链接进入。如果你手上有链接，请直接打开它。"}
+                            </p>
+                            <div className="flex items-center justify-center gap-2 text-xs text-slate-400">
+                                <Icon name="heart" size={14} color="#f28d86" />
+                                <span>测评只是了解自己的一个入口，不是标签</span>
+                            </div>
+                        </div>
+                    </div>
+                );
+            }
+
+            return (
+                <div className="min-h-screen flex flex-col">
+                    {/* ===== 顶部导航 ===== */}
+                    <header className="w-full px-4 sm:px-8 pt-5">
+                        <div className="max-w-6xl mx-auto flex flex-wrap gap-3 justify-between items-center">
+                            <div className="flex items-center gap-3 cursor-pointer tap" onClick={() => go('home')}>
+                                <div className="w-11 h-11 rounded-2xl flex items-center justify-center shadow-md" style={{ background: "linear-gradient(135deg,#ffbf86,#f28d86)" }}>
+                                    <Icon name="heart" size={22} color="#fff" />
+                                </div>
+                                <div className="leading-tight">
+                                    <div className="text-[15px] font-extrabold tracking-wide text-slate-800">16 型人格</div>
+                                    <div className="text-[11px] text-slate-400 font-semibold tracking-widest">PERSONALITY LAB</div>
+                                </div>
+                            </div>
+                            <nav className="flex items-center gap-2">
+                                <button onClick={() => go('home')} className={`px-4 py-2 rounded-xl text-[13px] font-bold transition ${view === 'home' ? 'bg-slate-800 text-white' : 'bg-white/80 text-slate-600 hover:bg-white'}`}>首页</button>
+                                <button onClick={() => go('encyclopedia')} className={`px-4 py-2 rounded-xl text-[13px] font-bold transition ${view === 'encyclopedia' ? 'bg-slate-800 text-white' : 'bg-white/80 text-slate-600 hover:bg-white'}`}>人格图鉴</button>
+                                {isAdmin && (
+                                    <button onClick={() => go('admin')} className={`px-3.5 py-2 rounded-xl text-[13px] font-bold transition flex items-center gap-1.5 ${view === 'admin' ? 'bg-[#e8a33d] text-white' : 'bg-[#fff2dd] text-[#a4681f] hover:bg-[#ffe9c8]'}`}>
+                                        <Icon name="crown" size={14} />
+                                        <span>后台</span>
+                                        <span className="px-1.5 rounded-full bg-white/70 text-[11px] text-[#a4681f]">{logs.length}</span>
+                                    </button>
+                                )}
+                            </nav>
+                        </div>
+                    </header>
+
+                    <main className="max-w-6xl mx-auto w-full flex-grow px-4 sm:px-8 py-8">
+                        {/* ===== 首页 ===== */}
+                        {view === 'home' && (
+                            <div className="space-y-8 animate-fade-in pb-10">
+                                <section className="clay-card p-6 sm:p-10 overflow-hidden relative">
+                                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+                                        <div className="lg:col-span-7">
+                                            {isAdmin && (
+                                                <div className="inline-flex items-center gap-2 mb-5 px-3.5 py-2 rounded-xl bg-[#fff5e3] border border-[#ffe2b8] text-[#a4681f] text-[12px] font-bold">
+                                                    <Icon name="crown" size={14} color="#c98a2b" />
+                                                    管理员已登录，可不限次数测评
+                                                </div>
+                                            )}
+                                            <h1 className="text-[30px] sm:text-[42px] leading-[1.22] font-black text-slate-800 tracking-tight">
+                                                先别急着定义自己，<br />
+                                                <span style={{ color: "#e07a6f" }}>先好好认识一次。</span>
+                                            </h1>
+                                            <p className="text-slate-500 mt-4 mb-7 text-[15px] leading-relaxed max-w-xl">
+                                                30 道贴近日常的小问题，帮你整理出四个维度上的偏好。结果不只是一个代号，还有 16 个专属卡通形象、一份写给「你这个人」的详细解读。
+                                            </p>
+                                            <div className="flex flex-col sm:flex-row gap-3">
+                                                <button onClick={startQuiz} className="clay-btn text-white font-bold px-7 py-3.5 rounded-2xl text-[15px] flex items-center justify-center gap-2" style={{ background: "linear-gradient(120deg,#ffa986,#ef7d7a)" }}>
+                                                    <Icon name="spark" size={17} color="#fff" />
+                                                    开始 30 题测评
+                                                </button>
+                                                <button onClick={() => go('encyclopedia')} className="px-7 py-3.5 rounded-2xl text-[15px] font-bold bg-white text-slate-600 border border-[#f0e7ea] hover:bg-[#fffaf7] transition">
+                                                    先看看 16 个形象
+                                                </button>
+                                            </div>
+                                            <div className="flex flex-wrap gap-x-6 gap-y-2 mt-6 text-[12.5px] text-slate-400 font-semibold">
+                                                <span>约 6 分钟</span>
+                                                <span>30 道题</span>
+                                                <span>含深度人物解读</span>
+                                                <span>结果仅本地保存</span>
+                                            </div>
+                                        </div>
+                                        <div className="lg:col-span-5">
+                                            <div className="flex items-end justify-center gap-1">
+                                                <div className="w-[31%] floaty" style={{ animationDelay: "0.4s" }}><Mascot type="INFP" /></div>
+                                                <div className="w-[44%] floaty"><Mascot type="ENFJ" /></div>
+                                                <div className="w-[31%] floaty" style={{ animationDelay: "0.8s" }}><Mascot type="ISTP" /></div>
+                                            </div>
+                                            <p className="text-center text-[11.5px] text-slate-400 mt-1">每个类型，都有自己的样子</p>
+                                        </div>
+                                    </div>
+                                </section>
+
+                                <section>
+                                    <div className="flex items-end justify-between gap-4 mb-5 px-1">
+                                        <div>
+                                            <h2 className="text-[20px] font-black text-slate-800">四大性格阵营</h2>
+                                            <p className="text-[13px] text-slate-400 mt-1">16 种人格分属四组，点开形象就能看到简介</p>
+                                        </div>
+                                    </div>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-5">
+                                        {GROUPS.map(group => (
+                                            <div key={group.key} className="clay-card p-5 flex flex-col">
+                                                <span className={`chip ${group.tint} self-start`}>{group.name} · {group.en}</span>
+                                                <p className="text-[12.5px] text-slate-500 mt-3 mb-4 leading-relaxed min-h-[42px]">{group.desc}</p>
+                                                <div className="grid grid-cols-4 gap-2 mt-auto">
+                                                    {group.types.map(type => (
+                                                        <button key={type} onClick={() => setSelectedModalType(type)} className="tap text-center bg-transparent border-0 p-0">
+                                                            <div className="mascot-frame p-1.5">
+                                                                <Mascot type={type} />
+                                                            </div>
+                                                            <span className="block text-[10.5px] font-bold text-slate-500 mt-1.5">{type}</span>
+                                                        </button>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </section>
+
+                                <section className="quote-card p-7 sm:p-9 text-center">
+                                    <p className="text-[17px] sm:text-[20px] font-bold text-[#8c5b52] leading-relaxed max-w-3xl mx-auto">
+                                        「人格不是一张判决书，而是一份说明书——它帮你解释自己为什么会这样，也提醒你，你还可以成为别的样子。」
+                                    </p>
+                                    <p className="text-[12px] text-[#b78d83] mt-3 font-semibold">写给每一个正在了解自己的人</p>
+                                </section>
+                            </div>
+                        )}
+
+                        {/* ===== 后台 ===== */}
+                        {view === 'admin' && isAdmin && (
+                            <div className="space-y-5 animate-fade-in pb-10">
+                                <div className="clay-card p-6 sm:p-8" style={{ background: "linear-gradient(135deg,#4a4358,#6b5a86)" }}>
+                                    <h2 className="text-2xl font-black text-white flex items-center gap-2">
+                                        <Icon name="crown" size={22} color="#ffd79a" />
+                                        管理员控制台
+                                    </h2>
+                                    <p className="text-white/70 text-[13px] mt-1.5">记录所有外发链接的使用情况。数据存在本机浏览器里，换设备看不到。</p>
+                                </div>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                                    <div className="clay-card p-6">
+                                        <div className="text-[11.5px] font-bold text-slate-400 tracking-wide mb-1">完成测评次数</div>
+                                        <div className="text-4xl font-black text-[#e07a6f]">{logs.length}<span className="text-sm font-medium text-slate-400 ml-2">次</span></div>
+                                    </div>
+                                    <div className="clay-card p-6">
+                                        <div className="text-[11.5px] font-bold text-slate-400 tracking-wide mb-2">当前权限</div>
+                                        <div className="text-[15px] font-bold text-[#2f876a] flex items-center gap-2">
+                                            <span className="w-2.5 h-2.5 rounded-full bg-[#4fb98c] inline-block"></span>
+                                            不限次数测评 (?admin=true)
+                                        </div>
+                                    </div>
+                                </div>
+                                <div className="clay-card p-6 sm:p-8">
+                                    <h3 className="text-[17px] font-black text-slate-800 mb-4">使用记录</h3>
+                                    {logs.length === 0 ? (
+                                        <div className="text-center py-14 text-slate-400 text-[13px]">还没有人完成过测评。</div>
+                                    ) : (
+                                        <div className="overflow-x-auto">
+                                            <table className="w-full text-left" style={{ tableLayout: "fixed" }}>
+                                                <colgroup>
+                                                    <col style={{ width: "12%" }} /><col style={{ width: "40%" }} /><col style={{ width: "20%" }} /><col style={{ width: "28%" }} />
+                                                </colgroup>
+                                                <thead>
+                                                    <tr className="text-[11.5px] text-slate-400 border-b border-[#f1ecf3]">
+                                                        <th className="py-2.5 pr-3 font-bold">序号</th>
+                                                        <th className="py-2.5 pr-3 font-bold">访客 Token</th>
+                                                        <th className="py-2.5 pr-3 font-bold">结果</th>
+                                                        <th className="py-2.5 font-bold">完成时间</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody className="text-[13px]">
+                                                    {logs.map((log, index) => (
+                                                        <tr key={index} className="border-b border-[#f7f3f9]">
+                                                            <td className="py-3 pr-3 text-slate-400">#{logs.length - index}</td>
+                                                            <td className="py-3 pr-3 font-bold text-slate-600 truncate">{log.token}</td>
+                                                            <td className="py-3 pr-3"><span className="chip bg-[#f4edff] text-[#6b4fa3]">{log.result}</span></td>
+                                                            <td className="py-3 text-slate-400 text-[12px]">{log.time}</td>
+                                                        </tr>
+                                                    ))}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        )}
+
+                        {/* ===== 答题 ===== */}
+                        {view === 'quiz' && questions.length > 0 && (
+                            <div className="max-w-2xl mx-auto animate-fade-in">
+                                <div className="clay-card p-6 sm:p-9">
+                                    <div className="flex justify-between items-center mb-3">
+                                        <button onClick={goBackQuestion} disabled={currentIndex === 0} className={`flex items-center gap-1 text-[12.5px] font-bold px-3 py-1.5 rounded-xl transition ${currentIndex === 0 ? 'text-slate-300' : 'text-slate-500 hover:bg-slate-50'}`}>
+                                            <Icon name="back" size={14} /> 上一题
+                                        </button>
+                                        <span className="text-[12px] font-bold text-[#e07a6f]">{currentIndex + 1} / {questions.length}</span>
+                                    </div>
+                                    <div className="progress-track mb-8">
+                                        <div className="progress-bar" style={{ width: `${((currentIndex + 1) / questions.length) * 100}%` }}></div>
+                                    </div>
+                                    <h2 className="text-[20px] sm:text-[24px] font-black text-slate-800 leading-snug mb-7">{questions[currentIndex].text}</h2>
+                                    <div className="space-y-3">
+                                        {questions[currentIndex].options.map((opt, idx) => {
+                                            const cur = answers[questions[currentIndex].id];
+                                            const isSelected = cur && cur.type === opt.type && cur.score === opt.score;
+                                            return (
+                                                <div key={idx}
+                                                    role="button"
+                                                    tabIndex={0}
+                                                    onClick={() => handleSelectOption(questions[currentIndex].id, opt.type, opt.score)}
+                                                    onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') handleSelectOption(questions[currentIndex].id, opt.type, opt.score); }}
+                                                    className={`option-card tap p-4 sm:p-5 ${isSelected ? 'selected' : ''}`}>
+                                                    <div className="flex items-start gap-3">
+                                                        <div className="w-5 h-5 mt-0.5 rounded-full border-2 flex items-center justify-center flex-shrink-0" style={{ borderColor: isSelected ? '#ef7d7a' : '#e2dbe8', background: isSelected ? '#ef7d7a' : '#fff' }}>
+                                                            {isSelected && <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="#fff" strokeWidth="3"><path d="M5 13l4 4 10-10" /></svg>}
+                                                        </div>
+                                                        <span className="text-[14.5px] font-medium text-slate-700 leading-relaxed">{opt.text}</span>
+                                                    </div>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                    <p className="text-center text-[11.5px] text-slate-400 mt-5">点选后会轻轻跳到下一题，选错了也能回上一题改</p>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* ===== 结果 ===== */}
+                        {view === 'result' && resultType && scores && (
+                            <div className="space-y-5 animate-fade-in pb-10">
+                                {/* 头部 */}
+                                <section className="clay-card p-6 sm:p-9">
+                                    <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-center">
+                                        <div className="md:col-span-8 order-2 md:order-1">
+                                            <div className="flex flex-wrap items-center gap-2 mb-2">
+                                                <span className={`chip ${GROUPS.find(g => g.key === mbtiData[resultType].group).tint}`}>{mbtiData[resultType].groupName} · {mbtiData[resultType].group}</span>
+                                                <span className="text-[11.5px] text-slate-400 font-semibold">四字母代号 {resultType}</span>
+                                            </div>
+                                            <h1 className="text-[32px] sm:text-[40px] font-black text-slate-800 leading-tight">
+                                                {mbtiData[resultType].name}
+                                                <span className="text-[15px] font-bold text-slate-400 ml-2 align-middle">{resultType}</span>
+                                            </h1>
+                                            <p className="text-[15px] font-bold mt-2" style={{ color: "#d4796f" }}>{mbtiData[resultType].slogan}</p>
+                                            <p className="text-[13.5px] text-slate-500 mt-3 leading-relaxed max-w-xl">{mbtiData[resultType].summary}</p>
+                                            <div className="flex flex-wrap gap-2.5 mt-5">
+                                                {isAdmin ? (
+                                                    <button onClick={startQuiz} className="px-4 py-2.5 rounded-xl text-[13px] font-bold text-white flex items-center gap-2" style={{ background: "linear-gradient(120deg,#ffa986,#ef7d7a)" }}>
+                                                        <Icon name="refresh" size={14} color="#fff" /> 再测一次
+                                                    </button>
+                                                ) : null}
+                                                <button onClick={() => go('encyclopedia')} className="px-4 py-2.5 rounded-xl text-[13px] font-bold text-slate-600 bg-white border border-[#efe8ee] hover:bg-[#fffaf7] transition">看看其他人格</button>
+                                                <button onClick={() => go('home')} className="px-4 py-2.5 rounded-xl text-[13px] font-bold text-slate-500 bg-white border border-[#efe8ee] hover:bg-[#fffaf7] transition flex items-center gap-1.5">
+                                                    <Icon name="home" size={14} /> 返回首页
+                                                </button>
+                                            </div>
+                                        </div>
+                                        <div className="md:col-span-4 order-1 md:order-2">
+                                            <div className="w-40 sm:w-48 mx-auto md:mx-0 md:ml-auto floaty">
+                                                <Mascot type={resultType} />
+                                            </div>
+                                        </div>
+                                    </div>
+                                </section>
+
+                                {/* 图表 */}
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                                    <section className="clay-card p-6 sm:p-7">
+                                        <h3 className="text-[15px] font-black text-slate-800 mb-4 flex items-center gap-2">
+                                            <span className="w-2.5 h-2.5 rounded-full" style={{ background: "#b394ea" }}></span>
+                                            八维偏好分布图
+                                        </h3>
+                                        <div className="relative w-full h-[290px]">
+                                            <canvas ref={radarChartRef}></canvas>
+                                        </div>
+                                        <p className="text-[11.5px] text-slate-400 mt-2 leading-relaxed">越靠近外圈的维度，说明你在这一侧的表现越明显。没有绝对的强弱，只有你更顺手的方式。</p>
+                                    </section>
+                                    <section className="clay-card p-6 sm:p-7">
+                                        <h3 className="text-[15px] font-black text-slate-800 mb-5 flex items-center gap-2">
+                                            <span className="w-2.5 h-2.5 rounded-full" style={{ background: "#f0a868" }}></span>
+                                            四组偏好比例
+                                        </h3>
+                                        <div className="space-y-5">
+                                            {DIMS.map(dim => <DimRow key={dim.a} dim={dim} scores={scores} />)}
+                                        </div>
+                                    </section>
+                                </div>
+
+                                {/* 深度画像 */}
+                                <section className="clay-card p-6 sm:p-9">
+                                    <h3 className="text-[17px] font-black text-slate-800 mb-1">关于你，比代号更具体的那部分</h3>
+                                    <p className="text-[11.5px] text-slate-400 mb-4">这段是根据 {resultType} 的典型特征写的，读的时候不妨留意哪几句最像你。</p>
+                                    <p className="text-[14.5px] text-slate-600 leading-[2]">{mbtiData[resultType].portrait}</p>
+
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mt-7">
+                                        <div className="clay-card-soft p-5">
+                                            <div className="text-[13px] font-black text-[#2f876a] mb-3 flex items-center gap-2">
+                                                <span className="w-2 h-2 rounded-full bg-[#4fb98c]"></span> 你身上很珍贵的部分
+                                            </div>
+                                            <div className="flex flex-wrap gap-2">
+                                                {mbtiData[resultType].strengths.map(s => (
+                                                    <span key={s} className="chip bg-[#e9f9f0] text-[#2f876a]">{s}</span>
+                                                ))}
+                                            </div>
+                                        </div>
+                                        <div className="clay-card-soft p-5">
+                                            <div className="text-[13px] font-black text-[#b0702c] mb-3 flex items-center gap-2">
+                                                <span className="w-2 h-2 rounded-full bg-[#ef9a44]"></span> 容易被消耗的地方
+                                            </div>
+                                            <div className="flex flex-wrap gap-2">
+                                                {mbtiData[resultType].blindspots.map(s => (
+                                                    <span key={s} className="chip bg-[#fff4e3] text-[#a4681f]">{s}</span>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </section>
+
+                                {/* 建议 */}
+                                <section className="clay-card p-6 sm:p-9">
+                                    <h3 className="text-[17px] font-black text-slate-800 mb-1">写给 {resultType} 的三条小建议</h3>
+                                    <p className="text-[11.5px] text-slate-400 mb-5">不用全做到，挑一条最不别扭的先试试。</p>
+                                    <div className="space-y-4">
+                                        {mbtiData[resultType].advice.map((a, i) => (
+                                            <div key={i} className="advice-item bg-[#fffaf6] rounded-2xl px-4 py-3.5 border border-[#f7ece4]">
+                                                <span className="advice-dot"></span>
+                                                <p className="text-[13.5px] text-slate-600 leading-relaxed">{a}</p>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </section>
+
+                                {/* 温暖寄语 */}
+                                <section className="quote-card p-7 sm:p-9 relative overflow-hidden">
+                                    <div className="absolute right-5 top-3 text-[80px] leading-none font-black text-[#f0c3b4] opacity-30 select-none">”</div>
+                                    <h3 className="text-[12px] font-bold tracking-[0.2em] text-[#b78d83] mb-3">给 {resultType} 的你</h3>
+                                    <p className="text-[16px] sm:text-[18px] font-bold text-[#8c5b52] leading-[1.9] max-w-3xl">{mbtiData[resultType].warm}</p>
+                                    <div className="flex items-center gap-2 mt-4 text-[11.5px] text-[#b78d83] font-semibold">
+                                        <Icon name="heart" size={13} color="#e29a8f" />
+                                        如果今天只记住一句话，希望是这一段
+                                    </div>
+                                </section>
+
+                                {/* 职业 情感 */}
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                                    <section className="clay-card p-6 sm:p-7">
+                                        <h3 className="text-[15px] font-black text-slate-800 mb-4 flex items-center gap-2">
+                                            <span className="w-2.5 h-2.5 rounded-full" style={{ background: "#5a8fd8" }}></span>
+                                            更顺手的工作方向
+                                        </h3>
+                                        <div className="flex flex-wrap gap-2 mb-3">
+                                            {mbtiData[resultType].careers.map(c => (
+                                                <span key={c} className="chip bg-[#eaf3ff] text-[#35619e]">{c}</span>
+                                            ))}
+                                        </div>
+                                        <p className="text-[12px] text-slate-400 leading-relaxed">这只是「更容易发挥优势」的方向，不是限制。真正决定你去哪的，是你在意什么。</p>
+                                    </section>
+                                    <section className="clay-card p-6 sm:p-7">
+                                        <h3 className="text-[15px] font-black text-slate-800 mb-4 flex items-center gap-2">
+                                            <span className="w-2.5 h-2.5 rounded-full" style={{ background: "#ef7d7a" }}></span>
+                                            亲密关系里的你
+                                        </h3>
+                                        <p className="text-[13.5px] text-slate-600 leading-[1.9]">{mbtiData[resultType].love}</p>
+                                        <div className="mt-4 px-4 py-3 rounded-2xl bg-[#fff5f2] border border-[#ffdfd2] flex items-center justify-between gap-3">
+                                            <span className="text-[11.5px] font-bold text-[#a8635a]">常被提到的互补类型</span>
+                                            <span className="text-[13px] font-black text-[#d4796f]">{mbtiData[resultType].match}</span>
+                                        </div>
+                                    </section>
+                                </div>
+
+                                <p className="text-center text-[11.5px] text-slate-400 px-6">这份报告是照「典型特征」写的，如果有些地方不像你，那很正常——人本来就比四个字母复杂。</p>
+                            </div>
+                        )}
+
+                        {/* ===== 图鉴 ===== */}
+                        {view === 'encyclopedia' && (
+                            <div className="space-y-8 animate-fade-in pb-10">
+                                <div className="text-center">
+                                    <h1 className="text-[28px] sm:text-[34px] font-black text-slate-800">16 型人格图鉴</h1>
+                                    <p className="text-[13px] text-slate-400 mt-2">每个类型都有自己的一张脸，点开看看它的故事</p>
+                                </div>
+                                {GROUPS.map(group => (
+                                    <section key={group.key}>
+                                        <div className="flex items-baseline gap-3 mb-4">
+                                            <h3 className="text-[18px] font-black text-slate-800">{group.name}</h3>
+                                            <span className="text-[11.5px] text-slate-400 font-bold tracking-wide">{group.en}</span>
+                                            <span className="hidden sm:inline text-[12px] text-slate-400">{group.desc}</span>
+                                        </div>
+                                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                                            {group.types.map(type => (
+                                                <button key={type} onClick={() => setSelectedModalType(type)} className="clay-card p-4 tap text-center hover:-translate-y-1 transition bg-white">
+                                                    <div className="w-20 h-20 sm:w-24 sm:h-24 mx-auto mb-2"><Mascot type={type} /></div>
+                                                    <div className="text-[15px] font-black text-slate-800 leading-tight">{mbtiData[type].name}</div>
+                                                    <div className="text-[11px] font-bold text-slate-400 mt-0.5">{type}</div>
+                                                    <p className="text-[11px] text-slate-500 mt-2 leading-snug line-clamp-2">{mbtiData[type].summary}</p>
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </section>
+                                ))}
+                            </div>
+                        )}
+                    </main>
+
+                    {/* ===== 详情弹窗 ===== */}
+                    {selectedModalType && (
+                        <div className="fixed inset-0 modal-bg flex items-center justify-center p-4 z-50" onClick={() => setSelectedModalType(null)}>
+                            <div className="clay-card max-w-xl w-full p-6 sm:p-8 relative bg-white pop max-h-[88vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+                                <button onClick={() => setSelectedModalType(null)} className="absolute top-4 right-4 w-9 h-9 rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 flex items-center justify-center" aria-label="关闭">
+                                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.4"><path d="M6 6l12 12M18 6l-12 12" /></svg>
+                                </button>
+                                <div className="flex items-center gap-4 mb-4">
+                                    <div className="w-20 h-20 flex-shrink-0"><Mascot type={selectedModalType} /></div>
+                                    <div className="min-w-0">
+                                        <h3 className="text-[22px] font-black text-slate-800 leading-tight">{mbtiData[selectedModalType].name}</h3>
+                                        <div className="flex items-center gap-2 mt-1">
+                                            <span className={`chip ${GROUPS.find(g => g.key === mbtiData[selectedModalType].group).tint}`}>{mbtiData[selectedModalType].groupName}</span>
+                                            <span className="text-[11.5px] text-slate-400 font-bold">{selectedModalType}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <p className="text-[13.5px] font-bold text-[#d4796f] mb-3">{mbtiData[selectedModalType].slogan}</p>
+                                <p className="text-[13px] text-slate-600 leading-[1.95] mb-4">{mbtiData[selectedModalType].portrait}</p>
+                                <div className="flex flex-wrap gap-2 mb-4">
+                                    {mbtiData[selectedModalType].strengths.map(s => <span key={s} className="chip bg-[#f5f0ff] text-[#6b4fa3]">{s}</span>)}
+                                </div>
+                                <div className="bg-[#fffaf6] border border-[#f7ece4] rounded-2xl p-4 mb-4">
+                                    <div className="text-[12px] font-black text-slate-700 mb-2">相处小建议</div>
+                                    <p className="text-[13px] text-slate-600 leading-relaxed">{mbtiData[selectedModalType].advice[0]}</p>
+                                </div>
+                                <div className="flex items-center justify-between text-[12px] bg-[#fff5f2] border border-[#ffdfd2] px-4 py-3 rounded-2xl">
+                                    <span className="font-bold text-[#a8635a]">互补类型</span>
+                                    <span className="font-black text-[#d4796f]">{mbtiData[selectedModalType].match}</span>
+                                </div>
+                                <p className="text-[12px] text-[#b78d83] leading-relaxed mt-4">{mbtiData[selectedModalType].warm}</p>
+                            </div>
+                        </div>
+                    )}
+
+                    <footer className="w-full px-4 sm:px-8 pb-8 pt-4">
+                        <div className="max-w-6xl mx-auto border-t border-[#efe8ee] pt-5 flex flex-col sm:flex-row gap-2 justify-between items-center text-[11.5px] text-slate-400">
+                            <span>本测评为趣味自我了解工具，不具备心理诊断效力。</span>
+                            <span className="flex items-center gap-1.5">结果只保存在你的浏览器，不会上传 <Icon name="heart" size={12} color="#e29a8f" /></span>
+                        </div>
+                    </footer>
+                </div>
+            );
+        }
+
+        ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+    </script>
+</body>
+</html>
+<!-- （注：内容由AI生成） -->
